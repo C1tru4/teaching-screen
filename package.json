@@ -1,0 +1,23 @@
+{
+  "name": "teaching-screen-app",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.0.1",
+    "typescript": "^5.5.4"
+  },
+  "scripts": {
+    "build:frontend": "cd admin-frontend && npm ci && npm run build && cd ../big-screen-frontend && npm ci && npm run build",
+    "build:backend": "cd backend && npm ci && npm run build",
+    "build:web": "npm run build:frontend && npm run build:backend",
+    "build": "build.bat",
+    "start:web": "start-web.bat",
+    "start:dev": "start-web-dev.bat",
+    "start:portable": "portable-start.bat",
+    "dev": "concurrently \"cd backend && npm run start:dev\" \"cd admin-frontend && npm run dev\" \"cd big-screen-frontend && npm run dev\"",
+    "installer": "create-installer.bat"
+  }
+}
+
+

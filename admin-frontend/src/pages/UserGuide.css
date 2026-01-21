@@ -1,0 +1,666 @@
+/* 用户指南页面样式 */
+.user-guide-container {
+  height: calc(100vh - 64px);
+  overflow: hidden;
+}
+
+.guide-layout {
+  display: flex;
+  height: 100%;
+}
+
+.guide-sidebar {
+  width: 300px;
+  background: #fafafa;
+  border-right: 1px solid #f0f0f0;
+  overflow-y: auto;
+}
+
+.guide-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
+.guide-content-inner {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 80px 24px; /* 增加底部padding，确保可以滚动到最底部 */
+}
+
+/* 容器内第一个块级元素不留上外边距 */
+.guide-content-inner > *:first-child {
+  margin-top: 0 !important;
+}
+
+/* 保险:对标题单独处理 (部分主题会覆盖适用选择器) */
+.guide-content-inner h1:first-child,
+.guide-content-inner h2:first-child,
+.guide-content-inner h3:first-child,
+.guide-content-inner h4:first-child,
+.guide-content-inner h5:first-child,
+.guide-content-inner h6:first-child {
+  margin-top: 0 !important;
+}
+
+/* 目录样式 */
+.table-of-contents {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.toc-header {
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* 搜索框在目录顶端的样式 */
+.toc-search {
+  padding: 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.toc-search .ant-input {
+  width: 100%;
+}
+
+.toc-list {
+  padding: 8px 0;
+}
+
+.toc-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #333;
+  display: block;
+  text-decoration: none;
+}
+
+.toc-item:hover {
+  background-color: #f5f5f5;
+  color: #1890ff;
+}
+
+.toc-item.active {
+  background-color: #e6f7ff;
+  border-left-color: #1890ff;
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.toc-item.level-1 { 
+  padding-left: 16px; 
+  font-weight: 500;
+}
+.toc-item.level-2 { 
+  padding-left: 32px; 
+  font-weight: 500;
+}
+.toc-item.level-3 { 
+  padding-left: 48px; 
+  font-weight: 500;
+}
+.toc-item.level-4 { 
+  padding-left: 64px; 
+  font-weight: 500;
+}
+.toc-item.level-5 { 
+  padding-left: 80px; 
+  font-weight: 500;
+}
+.toc-item.level-6 { 
+  padding-left: 96px; 
+  font-weight: 500;
+}
+
+/* 目录搜索样式 */
+.toc-search {
+  position: relative;
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-height: 400px;
+  background: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.search-dropdown-header {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.search-dropdown-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.search-dropdown-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background-color 0.2s;
+}
+
+.search-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.search-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.result-icon {
+  margin-right: 12px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.result-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-text {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-preview {
+  font-size: 12px;
+  color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-highlight {
+  background-color: #fff3cd;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+/* Markdown内容样式 */
+.guide-content-inner h1,
+.guide-content-inner h2,
+.guide-content-inner h3,
+.guide-content-inner h4,
+.guide-content-inner h5,
+.guide-content-inner h6 {
+  margin-top: 24px;
+  margin-bottom: 16px;
+  scroll-margin-top: 80px;
+}
+
+.guide-content-inner h1:first-child {
+  margin-top: 0;
+}
+
+.guide-content-inner p {
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.guide-content-inner ul,
+.guide-content-inner ol {
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.guide-content-inner li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.guide-content-inner code {
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.guide-content-inner pre {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.guide-content-inner pre code {
+  background: none;
+  padding: 0;
+}
+
+.guide-content-inner blockquote {
+  border-left: 4px solid #1890ff;
+  padding-left: 16px;
+  margin: 16px 0;
+  color: #666;
+  font-style: italic;
+}
+
+.guide-content-inner table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.guide-content-inner th,
+.guide-content-inner td {
+  border: 1px solid #d9d9d9;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.guide-content-inner th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .guide-layout {
+    flex-direction: column;
+  }
+  
+  .guide-sidebar {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .guide-content {
+    flex: 1;
+    padding: 16px;
+  }
+  
+  .search-dropdown {
+    width: 300px;
+  }
+}
+
+/* Markdown内容美化样式 */
+.guide-content-inner h1 {
+  font-size: 2.8em;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 2em 0 1em 0;
+  padding-bottom: 0.5em;
+  border-bottom: 3px solid #1890ff;
+}
+
+.guide-content-inner h2 {
+  font-size: 2.2em;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 1.8em 0 0.8em 0;
+  padding-left: 0.5em;
+  border-left: 4px solid #1890ff;
+}
+
+.guide-content-inner h3 {
+  font-size: 1.8em;
+  font-weight: 600;
+  color: #34495e;
+  margin: 1.5em 0 0.6em 0;
+}
+
+.guide-content-inner h4 {
+  font-size: 1.5em;
+  font-weight: 500;
+  color: #34495e;
+  margin: 1.2em 0 0.5em 0;
+}
+
+.guide-content-inner p {
+  line-height: 1.8;
+  color: #555;
+  margin: 1em 0;
+}
+
+.guide-content-inner ul {
+  margin: 1em 0;
+  padding-left: 1.5em;
+}
+
+.guide-content-inner li {
+  line-height: 1.6;
+  margin: 0.5em 0;
+  color: #555;
+}
+
+.guide-content-inner strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.guide-content-inner code {
+  background-color: #f8f9fa;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #e74c3c;
+}
+
+.guide-content-inner pre {
+  background-color: #f8f9fa;
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  border-left: 4px solid #1890ff;
+}
+
+.guide-content-inner pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #2c3e50;
+}
+
+.guide-content-inner blockquote {
+  border-left: 4px solid #1890ff;
+  padding: 0.5em 1em;
+  margin: 1em 0;
+  background-color: #f8f9fa;
+  color: #666;
+}
+
+.guide-content-inner a {
+  color: #1890ff;
+  text-decoration: none;
+}
+
+.guide-content-inner a:hover {
+  text-decoration: underline;
+}
+
+/* 表格样式 */
+.guide-content-inner table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.guide-content-inner th {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #1890ff;
+}
+
+.guide-content-inner td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8e8e8;
+  color: #555;
+}
+
+.guide-content-inner tr:hover {
+  background-color: #f8f9fa;
+}
+
+.guide-content-inner tr:last-child td {
+  border-bottom: none;
+}
+
+/* 引用块样式 */
+.guide-content-inner blockquote {
+  border-left: 4px solid #1890ff;
+  padding: 1em 1.5em;
+  margin: 1.5em 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #495057;
+  border-radius: 0 6px 6px 0;
+  position: relative;
+  font-style: italic;
+}
+
+.guide-content-inner blockquote::before {
+  content: '"';
+  font-size: 3em;
+  color: #1890ff;
+  position: absolute;
+  top: -10px;
+  left: 10px;
+  opacity: 0.3;
+}
+
+/* 搜索高亮样式 */
+.search-highlight {
+  background-color: #fff3cd;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+/* VS Code风格的Markdown样式 - 专业版 */
+.guide-content {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  color: #24292e;
+}
+
+/* 标题样式 - VS Code风格 */
+.guide-content .markdown-h1 {
+  font-size: 2em;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #eaecef;
+  color: #24292e;
+}
+
+.guide-content .markdown-h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid #eaecef;
+  color: #24292e;
+}
+
+.guide-content .markdown-h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  color: #24292e;
+}
+
+.guide-content .markdown-h4 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  color: #24292e;
+}
+
+.guide-content .markdown-h5 {
+  font-size: 0.875em;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  color: #24292e;
+}
+
+.guide-content .markdown-h6 {
+  font-size: 0.85em;
+  font-weight: 600;
+  margin: 24px 0 16px 0;
+  color: #6a737d;
+}
+
+/* 段落样式 */
+.guide-content .markdown-p {
+  margin-bottom: 16px;
+  line-height: 1.6;
+  color: #24292e;
+}
+
+/* 引用块样式 */
+.guide-content .markdown-blockquote {
+  padding: 0 1em;
+  color: #6a737d;
+  border-left: 0.25em solid #dfe2e5;
+  margin: 0 0 16px 0;
+  background-color: #f6f8fa;
+  border-radius: 0 6px 6px 0;
+}
+
+/* 表格样式 */
+.guide-content .markdown-table-wrapper {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.guide-content .markdown-table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.guide-content .markdown-table th {
+  font-weight: 600;
+  padding: 12px 16px;
+  border: 1px solid #dfe2e5;
+  background-color: #f6f8fa;
+  text-align: left;
+}
+
+.guide-content .markdown-table td {
+  padding: 12px 16px;
+  border: 1px solid #dfe2e5;
+}
+
+.guide-content .markdown-table tr:nth-child(2n) {
+  background-color: #f6f8fa;
+}
+
+.guide-content .markdown-table tr:hover {
+  background-color: #e6f7ff;
+}
+
+/* 列表样式 */
+.guide-content .markdown-ul,
+.guide-content .markdown-ol {
+  padding-left: 2em;
+  margin-bottom: 16px;
+}
+
+.guide-content .markdown-li {
+  margin-bottom: 0.25em;
+  line-height: 1.6;
+}
+
+/* 代码样式 */
+.guide-content .markdown-pre {
+  padding: 16px;
+  overflow: auto;
+  font-size: 85%;
+  line-height: 1.45;
+  background-color: #f6f8fa;
+  border-radius: 6px;
+  margin: 16px 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  border: 1px solid #e1e4e8;
+}
+
+.guide-content .markdown-code {
+  padding: 0;
+  margin: 0;
+  font-size: 85%;
+  background-color: transparent;
+  border-radius: 0;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #24292e;
+}
+
+.guide-content .markdown-inline-code {
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  background-color: rgba(27, 31, 35, 0.05);
+  border-radius: 3px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  color: #d73a49;
+}
+
+/* 强调样式 */
+.guide-content .markdown-strong {
+  font-weight: 600;
+  color: #24292e;
+}
+
+.guide-content .markdown-em {
+  font-style: italic;
+  color: #6a737d;
+}
+
+/* 链接样式 */
+.guide-content .markdown-link {
+  color: #0366d6;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.guide-content .markdown-link:hover {
+  color: #40a9ff;
+  border-bottom-color: #40a9ff;
+}
+
+/* 水平分割线 */
+.guide-content hr {
+  height: 0.25em;
+  padding: 0;
+  margin: 24px 0;
+  background-color: #e1e4e8;
+  border: 0;
+  border-radius: 3px;
+}

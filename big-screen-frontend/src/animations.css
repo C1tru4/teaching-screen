@@ -1,0 +1,100 @@
+/* 在 big-screen-frontend/src/animations.css 中添加高级动画 */
+
+/* 数字滚动动画 */
+@keyframes numberRoll {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes numberCountUp {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* 数据更新时的脉冲效果 */
+@keyframes dataPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* 图表加载动画 */
+@keyframes chartSlideIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(30px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* 卡片悬停时的微妙浮动 */
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-2px); }
+}
+
+/* 进度条填充动画 */
+@keyframes progressFill {
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--offset); }
+}
+
+/* 渐变背景动画 */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 应用动画的类 */
+.animate-number-roll {
+  animation: numberRoll 0.6s ease-out;
+}
+
+.animate-number-countup {
+  animation: numberCountUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-data-pulse {
+  animation: dataPulse 0.6s ease-in-out;
+}
+
+.animate-chart-slidein {
+  animation: chartSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-card-float {
+  animation: cardFloat 3s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* 悬停时的微妙效果 */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* 数据变化时的闪烁效果 */
+.data-updated {
+  animation: dataPulse 0.6s ease-in-out;
+}
+
+/* 加载骨架屏动画 */
+@keyframes skeletonPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.skeleton-pulse {
+  animation: skeletonPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
