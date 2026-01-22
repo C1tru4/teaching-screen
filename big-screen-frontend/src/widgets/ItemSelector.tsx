@@ -1,3 +1,4 @@
+// 功能：图表数据筛选器（课程/专业多选）。
 import React, { useState, useRef, useEffect } from 'react';
 
 interface Item {
@@ -10,7 +11,7 @@ interface ItemSelectorProps {
   onToggle: (name: string) => void;
   label: string; // "课程" 或 "专业"
   maxSelect?: number; // 最大选择数量
-  singleSelect?: boolean; // 是否单选（单选时，选择新的会替换旧的）
+  singleSelect?: boolean; // 是否单选
   defaultOpen?: boolean;
   onOpenChange?: (isOpen: boolean) => void;
 }
@@ -71,23 +72,23 @@ export default function ItemSelector({
 
   const handleItemClick = (name: string, isSelected: boolean) => {
     if (singleSelect) {
-      // 单选模式：如果点击已选中的，取消选择；如果点击未选中的，先取消所有，再选择新的
+      // 单选模式：仅保留一个选项。
       if (isSelected) {
         onToggle(name);
       } else {
-        // 先取消所有已选中的
+        // 先取消已选项。
         items.filter(item => item.selected).forEach(item => {
           if (item.name !== name) {
             onToggle(item.name);
           }
         });
-        // 再选择新的
+        // 再选择当前项。
         onToggle(name);
       }
     } else {
-      // 多选模式：检查是否超过限制
+      // 多选模式：检查是否超过限制。
       if (!isSelected && maxSelect && selectedCount >= maxSelect) {
-        // 可以在这里显示提示，但为了不打断用户操作，暂时不处理
+        // 达到上限时不再添加。
         return;
       }
       onToggle(name);

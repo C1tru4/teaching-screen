@@ -1,3 +1,4 @@
+// 功能：实验室使用热力图与筛选控件。
 import type { Scope } from '../lib/api'
 import React from 'react'
 
@@ -7,7 +8,7 @@ const periods = ['第1节','第2节','第3节','第4节','第5节','第6节','�
 export default function Heatmap({
   matrix, labs, selectedLab, labIdToName, onChangeLab, scope, onChangeScope, loading
 }: {
-  matrix: number[][];               // 后端原始 matrix
+  matrix: number[][];               // 后端原始矩阵
   labs: string[];
   selectedLab: 'all' | number | string;
   labIdToName: Record<number, string>;
@@ -16,19 +17,19 @@ export default function Heatmap({
   onChangeScope: (s: Scope) => void;
   loading?: boolean;
 }) {
-  // 1) 归一化：始终得到 8 x 7 的二维数组（不足补 0，多余截断）
+  // 归一化为 8x7 的二维数组（不足补 0，超出截断）。
   const m: number[][] = Array.from({ length: 8 }, (_, r) =>
     Array.from({ length: 7 }, (_, c) => Number(matrix?.[r]?.[c] ?? 0))
   );
 
-  // 颜色比例（防止全 0 导致 NaN）
+  // 颜色比例（防止全 0 导致 NaN）。
   const max = Math.max(1, ...m.flat());
   
-  // 改进的渐变计算 - 使用更明显的颜色区分
+  // 颜色梯度计算。
   const getColor = (value: number) => {
-    if (value <= 0) return 'rgba(56,189,248, 0.1)' // 稍微明显一点的背景
-    if (value === max) return 'rgba(56,189,248, 1)' // 最大值完全不透明
-    const intensity = 0.2 + (value / max) * 0.8 // 从0.2到1.0的渐变
+    if (value <= 0) return 'rgba(56,189,248, 0.1)' // 低值背景
+    if (value === max) return 'rgba(56,189,248, 1)' // 最大值不透明
+    const intensity = 0.2 + (value / max) * 0.8 // 0.2~1.0 渐变
     return `rgba(56,189,248, ${intensity})`
   }
 
@@ -55,13 +56,13 @@ export default function Heatmap({
         </select>
       </div>
 
-      {/* 2) 明确网格：第一行=列头(7)，第一列=行头(8)，中间= 8x7 数据 */}
+      {/* 网格说明：首行为列头，首列为行头，中间为 8x7 数据 */}
       <div
         className="mt-3 grid flex-1"
         style={{
           gridTemplateColumns: 'auto repeat(7, minmax(0,1fr))',
           gridTemplateRows: 'auto repeat(8, 1fr)',
-          gridAutoFlow: 'row',          // 强制按行排布，避免压成两行
+          gridAutoFlow: 'row',          // 强制按行排布，避免挤压
           gap: 4
         }}
       >

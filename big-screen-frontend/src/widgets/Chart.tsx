@@ -1,3 +1,4 @@
+// 功能：大屏图表渲染与图例/筛选交互。
 import React, { useState, useRef, useEffect } from 'react';
 import ReactECharts from 'echarts-for-react';
 import * as echarts from 'echarts';
@@ -13,11 +14,11 @@ interface ChartProps {
   config?: any;
   height?: string | number;
   width?: string | number;
-  chartData?: any; // 从后端获取的真实图表数据
-  showInternalTitle?: boolean; // 是否显示内部标题，默认为true
+  chartData?: any; // 后端返回的完整图表数据
+  showInternalTitle?: boolean; // 是否在图表内部显示标题，默认 true
 }
 
-// KPI指标标签映射
+// KPI 指标标签映射。
 const KPI_LABELS: Record<string, string> = {
   courseTotals: '课程总数',
   attendance: '出勤人数',
@@ -29,7 +30,7 @@ const KPI_LABELS: Record<string, string> = {
   completionRate: '完成率'
 };
 
-// 生成图表配置
+// 生成图表配置。参数: type 类型, data 图表数据, config 配置, chartData 原始数据。
 function generateChartOption(type: ChartType, data: any, config: any = {}, chartData: any = null, showInternalTitle: boolean = true, hideLegend: boolean = false, selectedLegends?: Set<string>, selectedItems?: Set<string>) {
   const baseOption = {
     backgroundColor: 'transparent',
@@ -42,7 +43,7 @@ function generateChartOption(type: ChartType, data: any, config: any = {}, chart
       bottom: '3%',
       containLabel: true
     },
-    // 确保清理所有可能的文字元素
+    // 重置可选元素，避免残留。
     graphic: undefined,
     series: [],
     xAxis: undefined,
@@ -53,16 +54,14 @@ function generateChartOption(type: ChartType, data: any, config: any = {}, chart
 
 
 
-  // 优先使用传入的data（已经通过getChartDataByType处理过的特定图表数据）
-  // chartData是完整的数据对象，用于提取图例信息等，不作为图表数据源
+  // data 是已处理后的图表数据；chartData 仅用于提取图例/筛选信息。
   const finalData = data;
   
-  // 检查数据是否有效（不是null、undefined，且不是空数组或空对象）
-  // 对于对象类型，需要检查是否有实际数据（categories/series/values等）
+  // 检查数据是否有效（非空数组/对象，且包含关键字段）。
   const hasValidData = finalData && (
     Array.isArray(finalData) ? finalData.length > 0 :
     typeof finalData === 'object' ? (
-      // 检查对象是否有实际数据字段且不为空
+      // 对象类型需包含 categories/series/values 或 value 等字段。
       (finalData.categories && Array.isArray(finalData.categories) && finalData.categories.length > 0) ||
       (finalData.series && Array.isArray(finalData.series) && finalData.series.length > 0) ||
       (finalData.values && Array.isArray(finalData.values) && finalData.values.length > 0) ||
@@ -72,7 +71,7 @@ function generateChartOption(type: ChartType, data: any, config: any = {}, chart
     finalData !== null && finalData !== undefined
   );
   
-  // 对于饼图和环形图，即使没有数据也显示空图表，不显示"暂无数据"文字
+  // 饼图/环形图允许空数据渲染占位，不展示“暂无数据”文字。
   if (!hasValidData && type !== 'pie' && type !== 'donut') {
     return {
       ...baseOption,

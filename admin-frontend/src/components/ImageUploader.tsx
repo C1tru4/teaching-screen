@@ -1,3 +1,4 @@
+// 功能：项目封面图片上传与删除控件。
 import { useState } from 'react'
 import { Upload, message } from 'antd'
 import { InboxOutlined, DeleteOutlined } from '@ant-design/icons'
@@ -52,7 +53,7 @@ export default function ImageUploader({ value, onChange, projectId, onUpload, on
     showUploadList: false,
     beforeUpload: async (file) => {
       await handleFileSelect(file)
-      return false // 阻止默认上传行为
+      return false // 阻止 Upload 组件自动上传
     }
   }
 
@@ -81,7 +82,7 @@ export default function ImageUploader({ value, onChange, projectId, onUpload, on
               const file = e.target.files?.[0];
               if (file) {
                 handleFileSelect(file);
-                e.target.value = ''; // 重置input，允许重复选择同一文件
+                e.target.value = ''; // 重置输入框以允许重复选择
               }
             }}
             id="image-upload-input"
@@ -108,7 +109,7 @@ export default function ImageUploader({ value, onChange, projectId, onUpload, on
                 e.currentTarget.style.display = 'none'
               }}
             />
-            {/* 悬停时显示的重新上传提示 */}
+            {/* 悬停提示：点击重新上传 */}
             <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg flex items-center justify-center">
               <div className="text-white text-center">
                 <InboxOutlined className="text-2xl mb-2" />

@@ -1,3 +1,4 @@
+// 功能：后端应用入口与全局中间件配置。
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

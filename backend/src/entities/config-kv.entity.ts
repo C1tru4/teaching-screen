@@ -1,3 +1,4 @@
+// 功能：配置键值实体。
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('config_kv')

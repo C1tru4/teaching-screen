@@ -1,3 +1,4 @@
+// 功能：横幅公告数据实体。
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 export type BannerLevel = 'info'|'warning'|'urgent';

@@ -1,11 +1,11 @@
+// 功能：导出课表/项目数据到 Excel，并提供学期计算工具。
 import * as XLSX from 'xlsx'
 
-// 导出课表数据到Excel
+// 导出单教室课表到 Excel。
 export function exportTimetableToExcel(timetableData: any[], labName: string, semester: string) {
-  // 创建工作簿
+  // 构建工作簿与表头数据。
   const workbook = XLSX.utils.book_new()
   
-  // 准备数据
   const worksheetData = [
     ['日期', '节次', '课程', '教师', '内容', '上课班级', '报课人数', '教室'],
     ...timetableData.map(item => [
@@ -20,10 +20,9 @@ export function exportTimetableToExcel(timetableData: any[], labName: string, se
     ])
   ]
   
-  // 创建工作表
+  // 生成工作表并设置列宽。
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
   
-  // 设置列宽
   const colWidths = [
     { wch: 12 }, // 日期
     { wch: 8 },  // 节次
@@ -36,24 +35,20 @@ export function exportTimetableToExcel(timetableData: any[], labName: string, se
   ]
   worksheet['!cols'] = colWidths
   
-  // 添加工作表到工作簿
+  // 添加工作表并写出文件。
   XLSX.utils.book_append_sheet(workbook, worksheet, `${labName}课表`)
   
-  // 生成文件名
   const fileName = `${labName}_${semester}学期课表_${new Date().toISOString().split('T')[0]}.xlsx`
   
-  // 导出文件
   XLSX.writeFile(workbook, fileName)
 }
 
-// 导出多教室课表数据到Excel
+// 导出多教室课表（每个教室一个工作表）。
 export function exportTimetableToExcelMultiLab(labTimetableData: Record<string, any[]>, semester: string) {
-  // 创建工作簿
   const workbook = XLSX.utils.book_new()
   
-  // 为每个教室创建工作表
+  // 为每个教室创建工作表。
   Object.entries(labTimetableData).forEach(([labName, timetableData]) => {
-    // 准备数据
     const worksheetData = [
       ['日期', '节次', '课程', '教师', '内容', '上课班级', '报课人数', '教室'],
       ...timetableData.map(item => [
@@ -68,10 +63,8 @@ export function exportTimetableToExcelMultiLab(labTimetableData: Record<string, 
       ])
     ]
     
-    // 创建工作表
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
     
-    // 设置列宽
     const colWidths = [
       { wch: 12 }, // 日期
       { wch: 8 },  // 节次
@@ -84,23 +77,18 @@ export function exportTimetableToExcelMultiLab(labTimetableData: Record<string, 
     ]
     worksheet['!cols'] = colWidths
     
-    // 添加工作表到工作簿
     XLSX.utils.book_append_sheet(workbook, worksheet, `${labName}课表`)
   })
   
-  // 生成文件名
   const fileName = `${semester}学期课表_${new Date().toISOString().split('T')[0]}.xlsx`
   
-  // 导出文件
   XLSX.writeFile(workbook, fileName)
 }
 
-// 导出项目数据到Excel
+// 导出项目列表到 Excel（按导出类型命名工作表）。
 export function exportProjectsToExcel(projects: any[], exportType: string, semester?: string) {
-  // 创建工作簿
   const workbook = XLSX.utils.book_new()
   
-  // 准备数据
   const worksheetData = [
     ['项目标题', '导师', '人数', '状态', '年份', '优秀', '简介', '团队成员', '论文文件名'],
     ...projects.map(project => [
@@ -116,10 +104,8 @@ export function exportProjectsToExcel(projects: any[], exportType: string, semes
     ])
   ]
   
-  // 创建工作表
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData)
   
-  // 设置列宽
   const colWidths = [
     { wch: 25 }, // 项目标题
     { wch: 12 }, // 导师
@@ -133,11 +119,9 @@ export function exportProjectsToExcel(projects: any[], exportType: string, semes
   ]
   worksheet['!cols'] = colWidths
   
-  // 添加工作表到工作簿
   const sheetName = exportType.includes('优秀') ? '优秀项目' : '项目列表'
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
   
-  // 生成文件名
   let fileName = ''
   if (exportType.includes('本学期')) {
     fileName = `${semester}学期${exportType.includes('优秀') ? '优秀' : ''}项目_${new Date().toISOString().split('T')[0]}.xlsx`
@@ -145,17 +129,16 @@ export function exportProjectsToExcel(projects: any[], exportType: string, semes
     fileName = `所有学期${exportType.includes('优秀') ? '优秀' : ''}项目_${new Date().toISOString().split('T')[0]}.xlsx`
   }
   
-  // 导出文件
   XLSX.writeFile(workbook, fileName)
 }
 
-// 获取当前学期信息
+// 获取当前学期名称（按月份划分春/秋）。
 export function getCurrentSemester(): string {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth() + 1
   
-  // 简单判断：9-12月为秋季学期，1-8月为春季学期
+  // 9-12月为秋季学期，1-8月为春季学期。
   if (month >= 9) {
     return `${year}年秋季`
   } else {

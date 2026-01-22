@@ -1,3 +1,4 @@
+// 功能：用户指南搜索结果下拉列表。
 import { SearchResult } from '../../types/UserGuide'
 
 interface SearchDropdownProps {

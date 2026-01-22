@@ -1,8 +1,9 @@
+// 功能：项目列表展示（含文件预览与成员轮播）。
 import { useState } from 'react'
 import type { Project } from '../lib/types'
 import PDFViewer from '../components/PDFViewer'
 
-// 团队成员轮播组件
+// 团队成员轮播组件。参数: members 成员列表。
 function TeamMembersCarousel({ members }: { members: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const maxVisible = 3
@@ -257,7 +258,7 @@ function ProjectDetailModal({ project, open, onClose, onOpenPaper }: {
   )
 }
 
-// 论文详细查看组件
+// 论文详细查看组件。参数: project 项目, open 是否显示, onClose 关闭回调。
 function PaperDetailModal({ project, open, onClose }: { project: Project | null; open: boolean; onClose: () => void }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -294,7 +295,7 @@ function PaperDetailModal({ project, open, onClose }: { project: Project | null;
             title={project.paper_filename || '论文预览'}
             onError={(e) => {
               console.error('PDF详细查看加载失败:', e);
-              // 可以在这里添加错误处理逻辑
+              // 预留：可在此补充错误提示。
             }}
             onLoad={(e) => {
               console.log('PDF详细查看加载成功:', `/api/projects/${project.id}/paper`);

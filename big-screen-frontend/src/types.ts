@@ -1,3 +1,4 @@
+// 功能：旧版大屏类型定义（部分兼容保留）。
 export type Banner = {
     content: string
     level: 'info' | 'warning' | 'urgent'
@@ -48,7 +49,7 @@ export type Banner = {
     title: string
     mentor: string
     member_count: number
-    status: 'reviewing'|'ongoing'|'done'|'excellent' // 注：excellent 作为徽标使用
+    status: 'reviewing'|'ongoing'|'done'|'excellent' // excellent 仅作为徽标使用
     excellent?: boolean
   }
   

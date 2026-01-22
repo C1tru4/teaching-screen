@@ -1,3 +1,4 @@
+// 功能：课表管理（网格编辑、批量导入、导出）。
 import { useEffect, useState } from 'react'
 import { Button, DatePicker, Form, Input, InputNumber, Modal, Select, Space, Switch, message, Tabs } from 'antd'
 import { DownloadOutlined } from '@ant-design/icons'
@@ -19,7 +20,7 @@ export default function TimetableAdmin() {
     const dayOfWeek = now.day() // 0=周日, 1=周一, ..., 6=周六
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
     return now.subtract(daysToMonday, 'day')
-  }) // 本周一
+  }) // 当前周的周一
   const [cells, setCells] = useState<Record<string, TimetableCell | null>>({})
   const [visible, setVisible] = useState(false)
   const [form] = Form.useForm<TimetableCell & { weekday: number; p: number }>()
@@ -46,7 +47,7 @@ export default function TimetableAdmin() {
       setLabs(list)
       setActiveLabId(list[0]?.id ?? null)
       
-      // 获取学期开始日期
+      // 读取学期开始日期配置，用于周次计算。
       try {
         const semesterConfig = await fetchSemesterStart()
         setSemesterStartMonday(semesterConfig.semesterStartMonday)
@@ -74,7 +75,7 @@ export default function TimetableAdmin() {
             teacher: session.teacher,
             content: session.content,
             enrolled: session.planned,
-            capacity: labCapacity, // 使用当前教室的实际容量
+            capacity: labCapacity, // 以当前教室容量为准
             allow_makeup: session.planned < labCapacity,
           duration: session.duration,
             classNames: (session as any).class_names || null,
@@ -85,6 +86,7 @@ export default function TimetableAdmin() {
     })()
   }, [activeLabId, monday, labs])
 
+  // 打开某节次的编辑面板。参数: weekday 周几, p 节次。
   const onCellClick = (weekday: number, p: number) => {
     console.log('onCellClick triggered. weekday:', weekday, 'p:', p)
     const exist = cells[`${weekday}-${p}`] ?? undefined
@@ -92,7 +94,7 @@ export default function TimetableAdmin() {
     
     setEditing({ weekday, p, exist: exist ?? undefined })
     
-    // 重置表单并设置新值
+    // 重置并回填表单。
     form.resetFields()
     form.setFieldsValue({
       weekday, 
@@ -116,39 +118,40 @@ export default function TimetableAdmin() {
     setVisible(true)
   }
 
+  // 保存单节或多节课程。参数: v 表单值。
   const save = async (v: any) => {
     if (!activeLabId) return
     
-    // 检查时间是否发生变化
+    // 判断是否更改了时间位置。
     const originalWeekday = editing?.weekday
     const originalPeriod = editing?.p
     const timeChanged = originalWeekday !== v.weekday || originalPeriod !== v.p
     
-    // 如果是编辑现有课程且时间发生变化，直接调用多课时更新逻辑
+    // 编辑且时间变更时，走多课时移动逻辑。
     if (editing?.exist?.id && timeChanged) {
       console.log('🔄 检测到节次变化，调用多课时更新逻辑')
       await handleMultiDurationUpdate(v)
       return
     }
     
-    // 检查新位置是否已有课程（仅对新建课程）
+    // 新建课程时检查新位置是否冲突。
     if (timeChanged && !editing?.exist?.id) {
       const newKey = `${v.weekday}-${v.p}`
       const existingCourse = cells[newKey]
       
       if (existingCourse) {
-        // 新位置有课程，询问是否覆盖
+        // 新位置已有课程，提示是否覆盖。
         Modal.confirm({
           title: '时间冲突',
           content: `新时间位置已有课程"${existingCourse.course}"，是否覆盖？`,
           okText: '覆盖',
           cancelText: '取消',
           onOk: async () => {
-            // 用户选择覆盖，继续保存
+            // 用户确认覆盖后保存。
             await performSave(v)
           },
           onCancel: () => {
-            // 用户取消，不执行保存
+            // 用户取消，不保存。
             return
           }
         })
@@ -156,25 +159,26 @@ export default function TimetableAdmin() {
       }
     }
     
-    // 没有冲突，直接保存
+    // 无冲突时直接保存。
     await performSave(v)
   }
   
+  // 执行保存动作（新建或更新）。参数: v 表单值。
   const performSave = async (v: any) => {
     if (!activeLabId) return
     
-    // 检查当前编辑的是否是多课时课程的延续部分
+    // 判断当前是否多课时课程的一部分。
     const currentKey = `${v.weekday}-${v.p}`
     const currentCell = cells[currentKey]
     
-    // 如果是编辑现有课程，需要处理多课时逻辑
+    // 编辑现有课程时处理多课时逻辑。
     if (editing?.exist?.id) {
-      // 多课时课程跳过自动调整逻辑，保持原有课时数
+      // 多课时课程保持原有课时数。
       console.log('🔄 多课时课程跳过自动调整，保持原有课时数:', v.duration)
       await handleMultiDurationUpdate(v)
     } else {
-      // 新建课程：自动调整课时：检查实际可用的课时数
-      const maxAvailablePeriods = 8 - v.p + 1 // 从当前节次到第8节的最大可用课时数
+      // 新建课程时，按剩余节次自动调整课时数。
+      const maxAvailablePeriods = 8 - v.p + 1 // 从当前节次到第 8 节的最大可用课时数
       const adjustedDuration = Math.min(v.duration, maxAvailablePeriods)
       
       if (adjustedDuration !== v.duration) {
@@ -196,11 +200,11 @@ export default function TimetableAdmin() {
     message.success('已保存')
     setVisible(false)
     
-    // 刷新课表数据
+    // 刷新课表数据。
     await refreshTimetableData()
   }
 
-  // 处理多课时课程的更新
+  // 处理多课时课程更新与移动。参数: v 表单值。
   const handleMultiDurationUpdate = async (v: any) => {
     const originalDuration = editing?.exist?.duration || 1
     const newDuration = v.duration || 1
@@ -221,13 +225,13 @@ export default function TimetableAdmin() {
       'v对象完整内容': v
     })
     
-    // 检查是否改变了节次或星期
+    // 判断是否移动了起始时间。
     const positionChanged = originalStartPeriod !== newStartPeriod || originalWeekday !== newWeekday
     
     if (positionChanged) {
       console.log('🚚 检测到节次变化，使用新的移动逻辑')
       
-      // 1. 存储完整信息到中间变量
+      // 1) 暂存课程信息。
       console.log('💾 步骤1: 存储完整信息到中间变量')
       const tempCourseInfo = {
         course: v.course,
@@ -241,7 +245,7 @@ export default function TimetableAdmin() {
       }
       console.log('💾 存储的课程信息:', tempCourseInfo)
       
-      // 2. 删除原课程（使用与删除按钮相同的逻辑）
+      // 2) 删除原课程（与删除按钮同逻辑）。
       console.log('🗑️ 步骤2: 删除原课程')
       console.log('🗑️ 开始删除课程:', {
         startPeriod: originalStartPeriod,
@@ -250,7 +254,7 @@ export default function TimetableAdmin() {
         course: v.course
       })
       
-      // 删除所有相关课时（与删除按钮逻辑一致）
+      // 删除所有相关课时。
       for (let i = 0; i < originalDuration; i++) {
         const period = originalStartPeriod + i
         const key = `${originalWeekday}-${period}`
@@ -271,17 +275,17 @@ export default function TimetableAdmin() {
         }
       }
       
-      // 3. 等待删除完成并刷新数据
+      // 3) 等待删除完成并刷新数据。
       await new Promise(resolve => setTimeout(resolve, 500))
       console.log('🔄 删除后强制刷新数据...')
       await refreshTimetableData()
       
-      // 4. 在新位置生成课程（只创建第一个课时，让后端自动处理多课时扩展）
+      // 4) 在新位置创建课程（仅创建第一个课时，后端扩展多课时）。
       console.log('📋 步骤4: 在新位置生成课程')
       console.log(`📍 起始位置: 第${tempCourseInfo.weekday}周第${tempCourseInfo.startPeriod}节课`)
       console.log(`📍 课时数: ${tempCourseInfo.duration}课时`)
       
-      // 只创建第一个课时，让后端根据duration自动处理多课时扩展
+      // 仅创建第一个课时，后端根据 duration 扩展。
       try {
         console.log(`📝 创建第${tempCourseInfo.weekday}周第${tempCourseInfo.startPeriod}节课（${tempCourseInfo.duration}课时）`)
         await saveSession(activeLabId!, tempCourseInfo.weekday, tempCourseInfo.startPeriod, {
@@ -298,7 +302,7 @@ export default function TimetableAdmin() {
       }
       
     } else {
-      // 没有改变节次，只同步更新信息
+      // 未移动起始时间时，仅同步更新信息。
       console.log('📝 节次未变化，同步更新所有课时的信息...')
       for (let i = 0; i < originalDuration; i++) {
         const period = originalStartPeriod + i
@@ -327,15 +331,15 @@ export default function TimetableAdmin() {
     
     console.log('✅ 多课时更新完成')
     
-    // 刷新课表数据以更新界面
+    // 刷新课表数据以更新界面。
     await refreshTimetableData()
     
-    // 关闭卡片并显示成功消息
+    // 关闭编辑卡片并提示。
     message.success('已保存')
     setVisible(false)
   }
 
-  // 刷新课表数据
+  // 刷新课表数据。
   const refreshTimetableData = async () => {
     const { days } = await fetchTimetableWeek(activeLabId!, monday.format('YYYY-MM-DD'))
     const d: Record<string, TimetableCell | null> = {}
@@ -352,7 +356,7 @@ export default function TimetableAdmin() {
           teacher: session.teacher,
           content: session.content,
           enrolled: session.planned,
-          capacity: labCapacity, // 使用当前教室的实际容量
+          capacity: labCapacity, // 以当前教室容量为准
           allow_makeup: session.planned < labCapacity,
           duration: session.duration,
         }) : null
@@ -360,7 +364,7 @@ export default function TimetableAdmin() {
     })
     setCells(d)
     
-    // 自动刷新大屏
+    // 自动刷新大屏数据。
     try {
       await triggerScreenRefresh()
     } catch (error) {
@@ -380,7 +384,7 @@ export default function TimetableAdmin() {
     })
   }
 
-  // 删除整个课时（所有相关课时）
+  // 删除整段课时（包含所有相关课时）。
   const removeEntireSession = async () => {
     if (!activeLabId || !editing?.exist?.id) return
     
@@ -394,7 +398,7 @@ export default function TimetableAdmin() {
       course: editing.exist.course
     })
     
-    // 删除所有相关课时
+    // 删除所有相关课时。
     for (let i = 0; i < duration; i++) {
       const period = startPeriod + i
       const key = `${editing.weekday}-${period}`
@@ -421,22 +425,22 @@ export default function TimetableAdmin() {
   }
 
 
-  // 导出课表数据（包含所有教室）
+  // 导出课表数据（多教室）。
   const handleExportTimetable = async () => {
     try {
-      // 获取所有实验室
-      const allLabs = labs.slice(0, 5) // 只取前5个教室
+      // 获取要导出的教室列表（最多前 5 个）。
+      const allLabs = labs.slice(0, 5)
       if (allLabs.length === 0) {
         message.error('没有可用的实验室')
         return
       }
 
-      // 获取当前学期的开始和结束日期
+      // 学期时间范围（默认 9 月至次年 2 月）。
       const currentYear = new Date().getFullYear()
       const semesterStart = new Date(currentYear, 8, 1) // 9月1日
       const semesterEnd = new Date(currentYear + 1, 1, 28) // 次年2月28日
       
-      // 为每个教室收集课表数据
+      // 为每个教室收集课表数据。
       const labTimetableData: Record<string, any[]> = {}
       
       for (const lab of allLabs) {
@@ -471,19 +475,19 @@ export default function TimetableAdmin() {
             console.warn(`获取 ${lab.name} ${mondayDate.toISOString().split('T')[0]} 周课表失败:`, error)
           }
           
-          // 移动到下一周
+          // 移动到下一周。
           currentDate.setDate(currentDate.getDate() + 7)
         }
       }
 
-      // 检查是否有数据
+      // 无数据时提示。
       const hasData = Object.values(labTimetableData).some(data => data.length > 0)
       if (!hasData) {
         message.warning('当前学期没有课表数据')
         return
       }
 
-      // 导出到Excel（包含多个教室的工作表）
+      // 导出到 Excel（每个教室一个工作表）。
       const semester = getCurrentSemester()
       exportTimetableToExcelMultiLab(labTimetableData, semester)
       message.success(`已导出 ${semester} 学期课表（包含 ${allLabs.length} 个教室）`)
@@ -493,7 +497,7 @@ export default function TimetableAdmin() {
     }
   }
 
-  // 批量上传课表（跨周导入，不再按周覆盖；容量与可补课后端自动处理；支持行内教室）
+  // 批量上传课表（跨周导入，容量/可补课由后端处理）。参数: data 表格行数据。
   const handleBatchUpload = async (data: any[]) => {
     if (!activeLabId) {
       message.error('请先选择实验室')
@@ -504,9 +508,7 @@ export default function TimetableAdmin() {
       const classNames = row.classNames || row['上课班级'] || undefined
       const plannedInput = row.planned ?? row['报课人数']
       
-      // 如果同时填写了报课人数和班级，优先使用输入的报课人数
-      // 如果只填写了班级，planned 为 undefined（后端会自动计算）
-      // 如果只填写了报课人数，planned 使用输入值
+      // planned 规则：有人数字段优先；仅班级时由后端计算。
       return {
       date: row.date || row['日期'],
       period: Number(row.period || row['节次']),
@@ -523,7 +525,7 @@ export default function TimetableAdmin() {
       }
     })
 
-    // 预检
+    // 预检（dryRun）。
     const dry = await batchUploadTimetable(activeLabId, monday.format('YYYY-MM-DD'), sessions, { dryRun: true })
     if (dry?.failed > 0 && Array.isArray(dry.errors)) {
       message.error(`预检失败 ${dry.failed} 条，请修正后再试`)
@@ -549,7 +551,7 @@ export default function TimetableAdmin() {
       } else {
         message.success(`成功处理 ${result.success} 条课程数据`)
       }
-      // 刷新课表
+      // 刷新课表。
       const { days } = await fetchTimetableWeek(activeLabId!, monday.format('YYYY-MM-DD'))
       const d: Record<string, TimetableCell | null> = {}
       const currentLab = labs.find(l => l.id === activeLabId)
@@ -565,7 +567,7 @@ export default function TimetableAdmin() {
             teacher: session.teacher,
             content: session.content,
             enrolled: session.planned,
-            capacity: labCapacity, // 使用当前教室的实际容量
+            capacity: labCapacity, // 以当前教室容量为准
             allow_makeup: session.planned < labCapacity,
           duration: session.duration,
             classNames: (session as any).class_names || null,
@@ -574,7 +576,7 @@ export default function TimetableAdmin() {
       })
       setCells(d)
       
-      // 自动刷新大屏
+      // 自动刷新大屏数据。
       try {
         await triggerScreenRefresh()
       } catch (error: any) {
@@ -582,7 +584,7 @@ export default function TimetableAdmin() {
       }
     }
     
-    // 保存错误信息到状态，用于在下方显示
+    // 保存错误信息用于展示。
     if (result.failed > 0 && result.errors && result.errors.length > 0) {
       setUploadErrors(result.errors)
       const errorMessages = result.errors.slice(0, 5).map((error: any) => {
@@ -604,7 +606,7 @@ export default function TimetableAdmin() {
       }
     }
     
-    // 返回结果给BatchUploader
+    // 返回结果给 BatchUploader。
     return result
   }
 
@@ -618,14 +620,14 @@ export default function TimetableAdmin() {
     return `${fmt(mon)} ～ ${fmt(sun)}`
   })()
 
-  // 计算周数（以开学日为基准）
+  // 计算周数（基于学期开始日期）。参数: date 日期。
   const getWeekNumber = (date: Dayjs) => {
-    // 从全局设置获取学期开始日期
+    // 以配置的学期开始日期为准。
     const semesterStart = semesterStartMonday ? dayjs(semesterStartMonday) : dayjs('2025-09-01')
     const weekDiff = date.diff(semesterStart, 'week')
     const weekNo = Math.max(1, weekDiff + 1)
     
-    // 调试信息
+    // 调试输出周次计算过程。
     console.log('周数计算调试:', {
       selectedDate: date.format('YYYY-MM-DD'),
       semesterStart: semesterStart.format('YYYY-MM-DD'),

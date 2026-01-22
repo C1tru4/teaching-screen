@@ -1,3 +1,4 @@
+// 功能：管理端使用的共享类型定义。
 export type BannerLevel = 'info' | 'warning' | 'urgent'
 
 export interface BannerConfig {
@@ -41,7 +42,7 @@ export interface TimetableCell {
   capacity?: number
   allow_makeup?: boolean
   duration?: number
-  classNames?: string | null // 上课班级，如 "计算机1班,计算机2班"
+  classNames?: string | null // 上课班级列表（逗号/顿号分隔）
 }
 
 export interface TimetableWeekResponse {
@@ -50,9 +51,9 @@ export interface TimetableWeekResponse {
   periods: Array<{ p: number; start: string; end: string }>
   days: Array<{
     date: string
-    dayOfWeek: number // 1..7
+    dayOfWeek: number // 1..7（周一到周日）
     slots: Array<{
-      period: number // 1..8
+      period: number // 1..8（节次）
       start: string
       end: string
       session: {
@@ -69,7 +70,7 @@ export interface TimetableWeekResponse {
   }>
 }
 
-// 大屏显示配置类型
+// 大屏显示模式
 export type ScreenDisplayMode = 'fixed' | 'adaptive'
 
 export interface ScreenFixedConfig {
@@ -78,7 +79,7 @@ export interface ScreenFixedConfig {
   scale: number
 }
 
-// 可视化配置类型
+// 大屏可视化配置
 export interface VisualizationConfig {
   kpi: {
     available: string[]
@@ -100,7 +101,7 @@ export interface VisualizationConfig {
   }
 }
 
-// KPI指标类型
+// KPI 指标枚举
 export type KPIMetric = 
   | 'courseTotals'      // 课程总数
   | 'attendance'        // 出勤人数
@@ -118,7 +119,7 @@ export type KPIMetric =
   | 'involvedClasses'        // 本学期总班级数
   | 'avgStudentsPerCourse'   // 平均每课程参与人次
 
-// 数据分析结果类型
+// 数据分析类型
 export type DataAnalysisType = 
   | 'labUtilization'        // 实验室使用率分析
   | 'projectStatusDist'     // 项目状态分布分析
@@ -142,7 +143,7 @@ export interface DataAnalysisResult {
   }
 }
 
-// 数据分析结果配置
+// 数据分析结果列表
 export const DATA_ANALYSIS_RESULTS: DataAnalysisResult[] = [
   {
     type: 'labUtilization',
@@ -210,7 +211,7 @@ export const DATA_ANALYSIS_RESULTS: DataAnalysisResult[] = [
   }
 ]
 
-// 图表类型
+// 图表类型枚举
 export type ChartType = 
   | 'heatmap'    // 热力图
   | 'pie'        // 饼图

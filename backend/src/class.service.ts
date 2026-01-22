@@ -1,3 +1,4 @@
+// 功能：班级数据服务（查询、计算、批量操作）。
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,23 +12,22 @@ export class ClassService {
   ) {}
 
   /**
-   * 根据班级名称获取班级信息
+   * 根据班级名称获取班级信息。
    */
   async findByName(name: string): Promise<ClassEntity | null> {
     return await this.classRepo.findOne({ where: { name } });
   }
 
   /**
-   * 根据班级名称列表获取班级信息并计算总人数
-   * @param classNames 班级名称字符串，支持逗号、顿号分隔
-   * @returns 总人数
+   * 根据班级名称列表计算总人数。
+   * 参数: classNames 班级名称字符串（支持逗号/顿号分隔）。
    */
   async calculateTotalStudents(classNames: string): Promise<number> {
     if (!classNames || !classNames.trim()) {
       return 0;
     }
 
-    // 支持逗号、顿号分隔
+    // 支持逗号、顿号分隔。
     const names = classNames.split(/[,，、]/).map(s => s.trim()).filter(Boolean);
     if (names.length === 0) {
       return 0;
@@ -53,14 +53,14 @@ export class ClassService {
   }
 
   /**
-   * 获取所有班级
+   * 获取所有班级。
    */
   async findAll(): Promise<ClassEntity[]> {
     return await this.classRepo.find({ order: { name: 'ASC' } });
   }
 
   /**
-   * 根据ID获取班级
+   * 根据 ID 获取班级。
    */
   async findOne(id: number): Promise<ClassEntity> {
     const classEntity = await this.classRepo.findOne({ where: { id } });
@@ -71,10 +71,10 @@ export class ClassService {
   }
 
   /**
-   * 创建班级
+   * 创建班级。
    */
   async create(data: { name: string; major?: string; student_count: number }): Promise<ClassEntity> {
-    // 检查是否已存在同名班级
+    // 检查是否已存在同名班级。
     const existing = await this.findByName(data.name);
     if (existing) {
       throw new BadRequestException(`班级已存在: ${data.name}`);
@@ -90,13 +90,13 @@ export class ClassService {
   }
 
   /**
-   * 更新班级
+   * 更新班级。
    */
   async update(id: number, data: { name?: string; major?: string; student_count?: number }): Promise<ClassEntity> {
     const classEntity = await this.findOne(id);
 
     if (data.name !== undefined) {
-      // 如果修改了名称，检查新名称是否已存在
+      // 修改名称时检查是否已存在。
       if (data.name !== classEntity.name) {
         const existing = await this.findByName(data.name);
         if (existing) {
@@ -118,7 +118,7 @@ export class ClassService {
   }
 
   /**
-   * 删除班级
+   * 删除班级。
    */
   async delete(id: number): Promise<void> {
     const classEntity = await this.findOne(id);
@@ -126,7 +126,7 @@ export class ClassService {
   }
 
   /**
-   * 批量创建班级
+   * 批量创建班级。
    */
   async batchCreate(classes: Array<{ name: string; major?: string; student_count: number }>): Promise<{ success: number; failed: number; errors: string[] }> {
     let success = 0;
@@ -147,7 +147,7 @@ export class ClassService {
   }
 
   /**
-   * 删除所有班级
+   * 删除所有班级。
    */
   async clearAllClasses(): Promise<void> {
     await this.classRepo.clear();

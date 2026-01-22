@@ -1,3 +1,4 @@
+// 功能：PDF 预览组件（iframe + 错误兜底）。
 import React, { useState } from 'react'
 
 interface PDFViewerProps {

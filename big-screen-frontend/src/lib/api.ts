@@ -1,3 +1,4 @@
+// 功能：大屏端接口封装。
 import type { RenderResponse, VisualizationConfig } from './types';
 
 const isProduction = import.meta.env.PROD;
@@ -25,7 +26,7 @@ export async function fetchRender(params: {
   return data;
 }
 
-// 获取大屏显示配置
+// 获取大屏显示配置。
 export async function fetchScreenConfig() {
   const res = await fetch(`${API_BASE}/config/screen/display-mode`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -33,7 +34,7 @@ export async function fetchScreenConfig() {
   return data;
 }
 
-// 获取大屏固定模式配置
+// 获取大屏固定模式配置。
 export async function fetchScreenFixedConfig() {
   const res = await fetch(`${API_BASE}/config/screen/fixed-config`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -41,7 +42,7 @@ export async function fetchScreenFixedConfig() {
   return data;
 }
 
-// 获取可视化配置
+// 获取可视化配置。
 export async function fetchVisualizationConfig(): Promise<VisualizationConfig> {
   const res = await fetch(`${API_BASE}/config/visualization`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -49,7 +50,7 @@ export async function fetchVisualizationConfig(): Promise<VisualizationConfig> {
   return data;
 }
 
-// 获取大屏版本号
+// 获取大屏版本号。
 export async function fetchScreenVersion() {
   const res = await fetch(`${API_BASE}/config/version`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -57,7 +58,7 @@ export async function fetchScreenVersion() {
   return data as { value: number };
 }
 
-// 获取所有配置（合并接口）
+// 获取所有配置（合并接口）。
 export async function fetchAllConfig() {
   const res = await fetch(`${API_BASE}/config/all-config`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

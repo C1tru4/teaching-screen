@@ -1,3 +1,4 @@
+// 功能：应用模块装配与依赖注册。
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataManager } from './utils/dataManager';

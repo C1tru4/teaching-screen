@@ -1,13 +1,14 @@
+// 功能：中部区域布局（热力图与可视化图表）。
 import React from 'react';
 import Heatmap from './Heatmap';
 import Chart from './Chart';
 import type { HeatmapData, VisualizationConfig } from '../lib/types';
 import type { Scope } from '../lib/api';
 
-// 根据图表类型获取对应的真实数据
+// 根据图表类型取出对应数据。参数: chartType 类型, chartData 原始数据。
 function getChartDataByType(chartType: string, chartData: any) {
   if (!chartData) {
-    // 如果chartData为空，返回空数据结构而不是null
+    // chartData 为空时返回空结构，避免渲染异常。
       switch (chartType) {
         case 'pie':
         case 'donut':
@@ -70,7 +71,7 @@ interface MiddleSectionProps {
   onChangeScope: (s: Scope) => void;
   loading?: boolean;
   config?: VisualizationConfig['middleSection'];
-  chartData?: any; // 从后端获取的真实图表数据
+  chartData?: any; // 后端返回的图表数据
 }
 
 export default function MiddleSection({
@@ -85,7 +86,7 @@ export default function MiddleSection({
   chartData
 }: MiddleSectionProps) {
   if (!config) {
-    // 默认显示热力图
+    // 无配置时默认显示热力图。
     return (
       <Heatmap
         matrix={heatmap.matrix}
@@ -101,7 +102,7 @@ export default function MiddleSection({
   }
 
   if (config.mode === 'large') {
-    // 大图表模式
+    // 大图表模式。
     return (
       <div className="h-full flex flex-col">
         {/* 大图表区域 */}
@@ -133,10 +134,10 @@ export default function MiddleSection({
   }
 
   if (config.mode === 'four-small') {
-    // 四小图表模式 - 2x2网格，每个图表占四分之一
+    // 四小图表模式（2x2 网格）。
     return (
       <div className="h-full flex flex-col">
-        {/* 四小图表网格 - 2x2布局 */}
+        {/* 四小图表网格 */}
         <div className="flex-1 grid grid-cols-2 grid-rows-2 gap-3">
           {config.smallCharts.charts.map((chart, index) => (
             <div 
@@ -161,7 +162,7 @@ export default function MiddleSection({
     );
   }
 
-  // 默认返回热力图
+  // 兜底返回热力图。
   return (
     <Heatmap
       matrix={heatmap.matrix}

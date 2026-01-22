@@ -1,3 +1,4 @@
+// 功能：顶部横幅展示（支持滚动与级别样式）。
 import type { BannerLevel } from '../lib/types'
 
 interface BannerProps {
@@ -10,7 +11,7 @@ interface BannerProps {
 export default function Banner({ content, level = 'urgent' as BannerLevel, scrollable = false, scrollTime = 15 }: BannerProps) {
   const cls = level === 'urgent' ? 'bg-red-600/80' : level === 'warning' ? 'bg-amber-600/80' : 'bg-sky-600/80'
   
-  // 如果内容为空，不显示横幅
+  // 内容为空时不显示横幅。
   if (!content || content.trim() === '') {
     return null
   }

@@ -1,3 +1,4 @@
+// 功能：课表网格展示（支持多课时续接显示与点击定位）。
 import { Table, Tag, Tooltip } from 'antd'
 import type { TimetableCell } from '../types'
 
@@ -8,7 +9,7 @@ export default function LabPeriodGrid({
   data,
   onCellClick,
 }: {
-  data: Record<string, TimetableCell | null> // key = `${weekday}-${p}`
+  data: Record<string, TimetableCell | null> // key: `${weekday}-${p}`
   onCellClick: (weekday: number, p: number) => void
 }) {
   const rows = PERIODS.map(p => {
@@ -36,12 +37,12 @@ export default function LabPeriodGrid({
         render: (cell: TimetableCell | null, row: { key: number }) => {
           const p = row.key
           
-          // 检查是否是某个多课时课程的延续部分
+          // 判断当前格是否为多课时课程的续接。
           let actualCell = cell
           let isContinuation = false
           
           if (!cell) {
-            // 检查是否有课程从之前的课时延续到这里
+            // 向前查找是否有跨课时课程覆盖到当前格。
             for (let checkP = 1; checkP < p; checkP++) {
               const prevCell = data[`${w}-${checkP}`]
               if (prevCell && prevCell.duration && prevCell.duration > 1) {
@@ -62,9 +63,9 @@ export default function LabPeriodGrid({
               onClick={() => {
                 console.log(`🖱️ 点击课时: 周${w} 第${p}节`)
                 
-                // 如果是延续课时，传递主课程的信息
+                // 续接格点击时定位到主课时。
                 if (isContinuation && actualCell) {
-                  // 找到主课程的课时
+                  // 查找主课时位置。
                   for (let checkP = 1; checkP < p; checkP++) {
                     const prevCell = data[`${w}-${checkP}`]
                     if (prevCell && prevCell.duration && prevCell.duration > 1) {
@@ -72,7 +73,7 @@ export default function LabPeriodGrid({
                       const endPeriod = checkP + prevCell.duration - 1
                       if (p >= startPeriod && p <= endPeriod) {
                         console.log(`✅ 传递主课程信息: 调用onCellClick(${w}, ${checkP})`)
-                        onCellClick(w, checkP) // 传递主课程的课时
+                        onCellClick(w, checkP)
                         return
                       }
                     }

@@ -1,3 +1,4 @@
+// 功能：管理端主布局与导航壳。
 import { Layout, Menu, Button, message } from 'antd'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { SyncOutlined } from '@ant-design/icons'

@@ -1,3 +1,4 @@
+// 功能：管理端应用入口与全局配置。
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'

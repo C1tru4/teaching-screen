@@ -1,3 +1,4 @@
+// 功能：训练营项目管理（增删改查、文件上传）与批量导入/导出。
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Form, Input, InputNumber, Modal, Select, Space, Switch, Table, Tag, message, Tabs, Dropdown } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, StarFilled, StarOutlined, UploadOutlined, DownloadOutlined, DownOutlined } from '@ant-design/icons'
@@ -28,10 +29,10 @@ export default function ProjectsAdmin() {
 
   const display = useMemo(() => {
     const filtered = list.filter(p => {
-      // 年份筛选
+      // 年份筛选。
       const yearMatch = year === 'all' || p.year === year
       
-      // 状态筛选
+      // 状态筛选。
       let statusMatch = true
       if (status === 'excellent') {
         statusMatch = p.excellent === true
@@ -39,12 +40,13 @@ export default function ProjectsAdmin() {
         statusMatch = p.status === status
       }
       
-      // 搜索筛选
+      // 关键词筛选（标题/导师）。
       const searchMatch = p.title.includes(search) || p.mentor.includes(search)
       
       return yearMatch && statusMatch && searchMatch
     })
-    return filtered // 顺序由后端保证：ongoing > reviewing > done，再按 id 倒序
+    // 维持后端返回的排序：进行中 > 审核中 > 已完成，再按 id 倒序。
+    return filtered
   }, [list, year, status, search])
 
   const years = useMemo(() => Array.from(new Set(list.map(p=>p.year))).sort((a,b)=>b-a), [list])
@@ -62,7 +64,7 @@ export default function ProjectsAdmin() {
     setOpen(true)
   }
   
-  // 保存（新建时去掉 id）
+  // 保存项目。参数: v 表单值。
   const save = async (v: Project) => {
     try {
       if (v.id && v.id !== 0) {
@@ -77,7 +79,7 @@ export default function ProjectsAdmin() {
       }
       setOpen(false)
       
-      // 自动刷新大屏
+      // 自动刷新大屏数据。
       try {
         await triggerScreenRefresh()
       } catch (error) {
@@ -88,7 +90,7 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // 处理图片上传
+  // 上传封面图片。参数: file 选择的图片文件。
   const handleImageUpload = async (file: File): Promise<string> => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -96,7 +98,7 @@ export default function ProjectsAdmin() {
     }
     const url = await uploadProjectImage(currentProject, file)
     
-    // 更新列表中的项目数据
+    // 同步更新列表中的封面链接。
     setList(prev => prev.map(p => 
       p.id === currentProject 
         ? { ...p, cover_url: url }
@@ -106,7 +108,7 @@ export default function ProjectsAdmin() {
     return url
   }
 
-  // 处理论文上传
+  // 上传论文文件。参数: file 选择的 PDF 文件。
   const handlePaperUpload = async (file: File): Promise<{ paper_url: string; paper_filename: string }> => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -114,7 +116,7 @@ export default function ProjectsAdmin() {
     }
     const result = await uploadProjectPaper(currentProject, file)
     
-    // 更新列表中的项目数据
+    // 同步更新列表中的论文信息。
     setList(prev => prev.map(p => 
       p.id === currentProject 
         ? { ...p, paper_url: result.paper_url, paper_filename: result.paper_filename }
@@ -124,7 +126,7 @@ export default function ProjectsAdmin() {
     return result
   }
 
-  // 处理论文删除
+  // 删除论文文件。
   const handlePaperDelete = async () => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -136,14 +138,14 @@ export default function ProjectsAdmin() {
       await deleteProjectPaper(currentProject)
       message.success('论文删除成功')
       
-      // 更新列表中的项目数据
+      // 同步更新列表中的论文信息。
       setList(prev => prev.map(p => 
         p.id === currentProject 
           ? { ...p, paper_url: null, paper_filename: null }
           : p
       ))
       
-      // 更新表单数据
+      // 同步更新表单字段。
       form.setFieldsValue({
         paper_url: null,
         paper_filename: null
@@ -153,7 +155,7 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // 处理视频上传
+  // 上传演示视频。参数: file 选择的视频文件。
   const handleVideoUpload = async (file: File): Promise<{ video_url: string; video_filename: string }> => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -161,7 +163,7 @@ export default function ProjectsAdmin() {
     }
     const result = await uploadProjectVideo(currentProject, file)
     
-    // 更新列表中的项目数据
+    // 同步更新列表中的视频信息。
     setList(prev => prev.map(p => 
       p.id === currentProject 
         ? { ...p, video_url: result.video_url, video_filename: result.video_filename }
@@ -171,7 +173,7 @@ export default function ProjectsAdmin() {
     return result
   }
 
-  // 处理视频删除
+  // 删除演示视频。
   const handleVideoDelete = async () => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -183,14 +185,14 @@ export default function ProjectsAdmin() {
       await deleteProjectVideo(currentProject)
       message.success('视频删除成功')
       
-      // 更新列表中的项目数据
+      // 同步更新列表中的视频信息。
       setList(prev => prev.map(p => 
         p.id === currentProject 
           ? { ...p, video_url: null, video_filename: null }
           : p
       ))
       
-      // 更新表单数据
+      // 同步更新表单字段。
       form.setFieldsValue({
         video_url: null,
         video_filename: null
@@ -200,7 +202,7 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // 处理图片删除
+  // 删除封面图片。
   const handleImageDelete = async () => {
     const currentProject = form.getFieldValue('id')
     if (!currentProject || currentProject === 0) {
@@ -212,14 +214,14 @@ export default function ProjectsAdmin() {
       await deleteProjectImage(currentProject)
       message.success('图片删除成功')
       
-      // 更新列表中的项目数据
+      // 同步更新列表中的封面链接。
       setList(prev => prev.map(p => 
         p.id === currentProject 
           ? { ...p, cover_url: null }
           : p
       ))
       
-      // 更新表单数据
+      // 同步更新表单字段。
       form.setFieldsValue({
         cover_url: null
       })
@@ -235,11 +237,12 @@ export default function ProjectsAdmin() {
       content: '此操作将删除项目数据及其相关文件，此操作不可恢复！',
       icon: <ExclamationCircleOutlined />,
       onOk: async () => {
-        await deleteProject(p.id, true) // 明确传递 purgeImages=true
+        // purgeImages=true: 同时删除相关文件。
+        await deleteProject(p.id, true)
         setList(prev => prev.filter(x => x.id !== p.id))
         message.success('项目及其相关文件已删除')
         
-        // 自动刷新大屏
+        // 自动刷新大屏数据。
         try {
           await triggerScreenRefresh()
         } catch (error) {
@@ -253,7 +256,7 @@ export default function ProjectsAdmin() {
     const upd = await updateProject(p.id, { excellent: !p.excellent })
     setList(prev => prev.map(x => x.id === p.id ? upd : x))
     
-    // 自动刷新大屏
+    // 自动刷新大屏数据。
     try {
       await triggerScreenRefresh()
     } catch (error) {
@@ -261,7 +264,7 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // 导出项目数据
+  // 导出项目数据（按学期/优秀筛选）。参数: exportType 导出类别。
   const handleExportProjects = async (exportType: string) => {
     try {
       let projects: Project[] = []
@@ -269,15 +272,15 @@ export default function ProjectsAdmin() {
       const semester = getCurrentSemester()
 
       if (exportType.includes('本学期')) {
-        // 获取本学期项目
+        // 获取本学期项目。
         projects = await fetchProjects({ year: currentYear })
       } else {
-        // 获取所有学期项目
+        // 获取所有学期项目。
         projects = await fetchProjects()
       }
 
       if (exportType.includes('优秀')) {
-        // 筛选优秀项目
+        // 筛选优秀项目。
         projects = projects.filter(p => p.excellent)
       }
 
@@ -286,7 +289,7 @@ export default function ProjectsAdmin() {
         return
       }
 
-      // 导出到Excel
+      // 导出到 Excel。
       exportProjectsToExcel(projects, exportType, semester)
       message.success(`已导出${exportType}数据`)
     } catch (error) {
@@ -295,7 +298,7 @@ export default function ProjectsAdmin() {
     }
   }
 
-  // 导出菜单项
+  // 导出菜单项。
   const exportMenuItems: MenuProps['items'] = [
     {
       key: 'current-semester',
@@ -319,10 +322,10 @@ export default function ProjectsAdmin() {
     }
   ]
 
-  // 批量上传项目
+  // 批量上传项目。参数: data 上传解析出的表格行。
   const handleBatchUpload = async (data: any[]) => {
     const projects = data.map(row => {
-      // 处理团队成员字段
+      // 处理团队成员字段。
       let team_members: string[] = []
       if (row.team_members || row['团队成员']) {
         const membersStr = row.team_members || row['团队成员']
@@ -333,7 +336,7 @@ export default function ProjectsAdmin() {
         }
       }
       
-      // 处理状态字段：将中文状态映射为英文
+      // 状态字段：将中文映射为英文。
       const statusMap: Record<string, string> = {
         '审核中': 'reviewing',
         '进行中': 'ongoing', 
@@ -345,7 +348,7 @@ export default function ProjectsAdmin() {
       const rawStatus = row.status || row['状态'] || 'reviewing'
       const mappedStatus = statusMap[rawStatus] || 'reviewing'
       
-      // 处理优秀字段：将中文布尔值映射为布尔值
+      // 优秀字段：将中文布尔值映射为布尔值。
       const excellentMap: Record<string, boolean> = {
         '是': true,
         '否': false,
@@ -371,11 +374,11 @@ export default function ProjectsAdmin() {
     const result = await batchCreateProjects(projects)
     
     if (result.success > 0) {
-      // 刷新列表
+      // 刷新列表。
       const res = await fetchProjects()
       setList(res)
       
-      // 自动刷新大屏
+      // 自动刷新大屏数据。
       try {
         await triggerScreenRefresh()
       } catch (error) {
@@ -383,9 +386,9 @@ export default function ProjectsAdmin() {
       }
     }
     
-    // 保存错误信息到状态，用于在下方显示
+    // 保存错误信息用于展示。
     if (result.errors && result.errors.length > 0) {
-      // 将错误信息转换为统一格式
+      // 统一错误格式。
       const formattedErrors = result.errors.map((error: any, idx: number) => {
         if (typeof error === 'string') {
           return { index: idx + 1, message: error }
@@ -411,7 +414,7 @@ export default function ProjectsAdmin() {
       setUploadErrors([])
     }
     
-    // 返回结果给BatchUploader
+    // 返回结果给 BatchUploader。
     return result
   }
 
@@ -446,7 +449,7 @@ export default function ProjectsAdmin() {
         <div style={{ maxWidth: 130 }}>
           {members && members.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {/* 显示前3个成员，竖着排列 */}
+              {/* 仅展示前 3 个成员 */}
               {members.slice(0, 3).map((member, index) => (
                 <div 
                   key={index}
@@ -463,7 +466,7 @@ export default function ProjectsAdmin() {
                   {index === 0 ? '👑 ' : ''}{member}
                 </div>
               ))}
-              {/* 如果超过3个成员，显示省略标注 */}
+              {/* 成员超过 3 个时显示数量 */}
               {members.length > 3 && (
                 <div style={{ 
                   fontSize: '11px', 

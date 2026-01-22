@@ -1,3 +1,4 @@
+// 功能：管理端路由配置。
 import { createBrowserRouter } from 'react-router-dom'
 import TimetableAdmin from './pages/TimetableAdmin'
 import ProjectsAdmin from './pages/ProjectsAdmin'

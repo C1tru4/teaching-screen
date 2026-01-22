@@ -1,3 +1,4 @@
+// 功能：本地数据与上传文件管理。
 import path from 'path';
 import fs from 'fs-extra';
 import os from 'os';

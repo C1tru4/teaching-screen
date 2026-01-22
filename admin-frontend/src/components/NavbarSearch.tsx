@@ -1,3 +1,4 @@
+// 功能：顶部导航的用户指南搜索框。
 import { useState, useEffect, useRef } from 'react'
 import { Input, Button, Space } from 'antd'
 import { SearchOutlined, ClearOutlined } from '@ant-design/icons'
@@ -16,7 +17,7 @@ export default function NavbarSearch({ onSearch, onClear, loading }: NavbarSearc
   const [dropdownVisible, setDropdownVisible] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
-  // 实时搜索 - 使用防抖
+  // 实时搜索（防抖）。
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
@@ -28,7 +29,7 @@ export default function NavbarSearch({ onSearch, onClear, loading }: NavbarSearc
       return
     }
     
-    // 防抖延迟300ms
+    // 防抖 300ms。
     searchTimeoutRef.current = setTimeout(() => {
       onSearch(inputValue, (results) => {
         setSearchResults(results)
@@ -52,7 +53,7 @@ export default function NavbarSearch({ onSearch, onClear, loading }: NavbarSearc
   
   const handleResultClick = (result: SearchResult) => {
     setDropdownVisible(false)
-    // 触发跳转到对应位置
+    // 滚动到对应标题。
     const element = document.getElementById(result.id)
     if (element) {
       element.scrollIntoView({
@@ -88,7 +89,7 @@ export default function NavbarSearch({ onSearch, onClear, loading }: NavbarSearc
         }
       />
       
-      {/* 搜索结果下拉列表 */}
+      {/* 搜索结果列表 */}
       {dropdownVisible && searchResults.length > 0 && (
         <SearchDropdown
           results={searchResults}

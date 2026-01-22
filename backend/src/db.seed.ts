@@ -1,3 +1,4 @@
+// 功能：应用启动时的种子数据初始化。
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

@@ -1,3 +1,4 @@
+// 功能：用户指南模块的类型定义。
 export interface TitleItem {
   level: number
   text: string

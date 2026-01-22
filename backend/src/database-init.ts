@@ -1,3 +1,4 @@
+// 功能：数据库初始化与基础数据写入。
 import { DataSource } from 'typeorm';
 import { LabEntity } from './entities/lab.entity';
 import { ProjectEntity } from './entities/project.entity';

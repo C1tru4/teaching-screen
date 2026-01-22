@@ -1,3 +1,4 @@
+// 功能：课表查询接口（对外展示用）。
 import { Controller, Get, Query, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';

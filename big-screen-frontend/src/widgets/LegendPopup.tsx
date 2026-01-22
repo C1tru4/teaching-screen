@@ -1,3 +1,4 @@
+// 功能：图例弹窗（显示/筛选系列）。
 import React, { useState, useRef, useEffect } from 'react';
 
 interface LegendItem {
@@ -10,7 +11,7 @@ interface LegendPopupProps {
   items: LegendItem[];
   onToggle: (name: string) => void;
   defaultOpen?: boolean; // 是否默认打开
-  onOpenChange?: (isOpen: boolean) => void; // 图例打开/关闭状态变化回调
+  onOpenChange?: (isOpen: boolean) => void; // 打开/关闭回调
 }
 
 export default function LegendPopup({ items, onToggle, defaultOpen = false, onOpenChange }: LegendPopupProps) {
@@ -20,21 +21,21 @@ export default function LegendPopup({ items, onToggle, defaultOpen = false, onOp
   
   if (items.length === 0) return null;
   
-  // 如果defaultOpen为true，在items变化时保持打开状态
+  // defaultOpen 为 true 时保持打开。
   useEffect(() => {
     if (defaultOpen && items.length > 0) {
       setIsOpen(true);
     }
   }, [defaultOpen, items.length]);
   
-  // 通知父组件图例状态变化
+  // 通知父组件图例状态变化。
   useEffect(() => {
     if (onOpenChange) {
       onOpenChange(isOpen);
     }
   }, [isOpen, onOpenChange]);
   
-  // 点击外部关闭弹窗（但不包括图表区域，因为图例直接覆盖图表）
+  // 点击外部关闭弹窗（图表区域除外）。
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -43,14 +44,13 @@ export default function LegendPopup({ items, onToggle, defaultOpen = false, onOp
         buttonRef.current &&
         !buttonRef.current.contains(event.target as Node)
       ) {
-        // 只有当点击的不是图表区域时才关闭（图表区域会被图例覆盖，所以不需要关闭）
-        // 这里只处理点击按钮外部但不在图例弹窗内的情况
+        // 点击弹窗与按钮之外时关闭。
         setIsOpen(false);
       }
     };
     
     if (isOpen) {
-      // 延迟添加事件监听，避免立即触发
+      // 延迟绑定监听，避免立即触发。
       const timer = setTimeout(() => {
         document.addEventListener('mousedown', handleClickOutside);
       }, 100);
@@ -81,7 +81,7 @@ export default function LegendPopup({ items, onToggle, defaultOpen = false, onOp
           className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 rounded-lg bg-slate-800/95 border border-white/20 shadow-2xl z-[10000] min-w-[200px] max-w-[400px] max-h-[300px] overflow-y-auto"
           style={{ 
             backdropFilter: 'blur(10px)',
-            pointerEvents: 'auto' // 确保图例捕获所有鼠标事件
+            pointerEvents: 'auto' // 保证图例可捕获鼠标事件
           }}
           onMouseDown={(e) => {
             e.stopPropagation();

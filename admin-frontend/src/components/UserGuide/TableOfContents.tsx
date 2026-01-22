@@ -1,3 +1,4 @@
+// 功能：用户指南目录与搜索框组件。
 import { useState, useEffect, useRef } from 'react'
 import { Input, Button, Space } from 'antd'
 import { ClearOutlined } from '@ant-design/icons'
@@ -19,11 +20,11 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
   const [dropdownVisible, setDropdownVisible] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
-  // 添加调试信息
+  // 调试输出：目录标题列表。
   console.log('TableOfContents received titles:', titles)
   console.log('Titles length:', titles.length)
   
-  // 实时搜索 - 使用防抖
+  // 实时搜索（防抖）。
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current)
@@ -35,7 +36,7 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
       return
     }
     
-    // 防抖延迟300ms
+    // 防抖 300ms。
     searchTimeoutRef.current = setTimeout(() => {
       onSearch(inputValue, (results) => {
         setSearchResults(results)
@@ -59,7 +60,7 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
   
   const handleResultClick = (result: SearchResult) => {
     setDropdownVisible(false)
-    // 触发跳转到对应位置
+    // 滚动到对应标题。
     const element = document.getElementById(result.id)
     if (element) {
       element.scrollIntoView({
@@ -75,7 +76,7 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
   
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // 回车时立即搜索
+      // 回车立即触发搜索。
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current)
       }
@@ -90,7 +91,7 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
     <div className="table-of-contents">
       <div className="toc-header">目录</div>
       
-      {/* 搜索框 */}
+      {/* 目录搜索框 */}
       <div className="toc-search">
         <Input
           value={inputValue}
@@ -110,7 +111,7 @@ export default function TableOfContents({ titles, activeId, onTitleClick, onSear
           }
         />
         
-        {/* 搜索结果下拉列表 */}
+        {/* 搜索结果列表 */}
         {dropdownVisible && searchResults.length > 0 && (
           <SearchDropdown
             results={searchResults}

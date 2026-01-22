@@ -1,3 +1,4 @@
+// 功能：用户指南页面（Markdown 渲染、目录与搜索）。
 import { useEffect, useRef, useState } from 'react'
 import { Layout, Typography } from 'antd'
 import ReactMarkdown from 'react-markdown'
@@ -28,12 +29,12 @@ export default function UserGuide() {
   
   const loadMarkdownContent = async () => {
     try {
-      // 从API获取用户指南内容
+      // 从 API 获取用户指南内容。
       const response = await fetch('/api/user-guide');
       if (response.ok) {
         const data = await response.json();
         setMarkdownContent(data.content);
-        // 提取标题生成目录
+        // 提取标题生成目录。
         const extractedTitles = extractTitles(data.content);
         setTitles(extractedTitles);
         console.log('用户指南来源:', data.source);
@@ -44,7 +45,7 @@ export default function UserGuide() {
       }
     } catch (error) {
       console.error('加载用户指南失败:', error);
-      // 使用默认内容作为后备
+      // API 不可用时使用默认内容。
       const defaultContent = `# 🎓 教学屏幕应用使用说明
 
 > **系统简介**：教学屏幕应用是一个基于Web的智能教学管理系统，专为实验室和教学环境设计。系统采用前后端分离架构，提供管理端和大屏端两个主要界面，支持实时数据同步和可视化展示。
@@ -424,7 +425,7 @@ export default function UserGuide() {
   const scrollToElement = (id: string) => {
     const element = document.getElementById(id)
     if (element && contentRef.current) {
-      // 计算元素相对于内容容器的位置
+      // 计算元素在内容容器中的滚动位置。
       const containerRect = contentRef.current.getBoundingClientRect()
       const elementRect = element.getBoundingClientRect()
       const scrollTop = contentRef.current.scrollTop + elementRect.top - containerRect.top - 20
@@ -437,7 +438,7 @@ export default function UserGuide() {
   }
   
   const highlightSearchTerm = (text: string, term: string) => {
-    // 这里可以实现文本高亮逻辑
+    // 预留：可在此扩展搜索高亮逻辑。
     console.log('Highlighting:', text, term)
   }
   
@@ -463,7 +464,7 @@ export default function UserGuide() {
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
-                // 自定义标题组件，确保ID正确生成
+                // 自定义标题组件，确保 ID 生成一致。
                 h1: ({ children, ...props }) => {
                   const text = String(children)
                   const id = generateId(text)
@@ -494,7 +495,7 @@ export default function UserGuide() {
                   const id = generateId(text)
                   return <h6 id={id} className="markdown-h6" {...props}>{children}</h6>
                 },
-                // 代码块样式
+                // 代码块渲染样式。
                 code({node, inline, className, children, ...props}: any) {
                   return inline ? (
                     <code className="markdown-inline-code" {...props}>
@@ -508,7 +509,7 @@ export default function UserGuide() {
                     </pre>
                   )
                 },
-                // 表格样式
+                // 表格渲染样式。
                 table: ({ children, ...props }) => (
                   <div className="markdown-table-wrapper">
                     <table className="markdown-table" {...props}>
@@ -516,19 +517,19 @@ export default function UserGuide() {
                     </table>
                   </div>
                 ),
-                // 引用块样式
+                // 引用块渲染样式。
                 blockquote: ({ children, ...props }) => (
                   <blockquote className="markdown-blockquote" {...props}>
                     {children}
                   </blockquote>
                 ),
-                // 段落样式
+                // 段落渲染样式。
                 p: ({ children, ...props }) => (
                   <p className="markdown-p" {...props}>
                     {children}
                   </p>
                 ),
-                // 列表样式
+                // 列表渲染样式。
                 ul: ({ children, ...props }) => (
                   <ul className="markdown-ul" {...props}>
                     {children}
@@ -544,13 +545,13 @@ export default function UserGuide() {
                     {children}
                   </li>
                 ),
-                // 链接样式
+                // 链接渲染样式。
                 a: ({ children, ...props }) => (
                   <a className="markdown-link" target="_blank" rel="noopener noreferrer" {...props}>
                     {children}
                   </a>
                 ),
-                // 强调样式
+                // 强调渲染样式。
                 strong: ({ children, ...props }) => (
                   <strong className="markdown-strong" {...props}>
                     {children}
@@ -569,7 +570,7 @@ export default function UserGuide() {
         </div>
       </div>
       
-      {/* 搜索下拉列表 */}
+      {/* 搜索结果下拉列表 */}
       {dropdownVisible && searchResults.length > 0 && (
         <SearchDropdown
           results={searchResults}

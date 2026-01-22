@@ -1,3 +1,4 @@
+// 功能：大屏端通用类型定义。
 export type BannerLevel = 'info' | 'warning' | 'urgent';
 
 export interface Banner {
@@ -11,9 +12,9 @@ export interface Banner {
 
 export interface SpotlightCourse {
   id: number;
-  date: string; // "YYYY-MM-DD" - 课程日期，用于前端判断状态
+  date: string; // "YYYY-MM-DD"，用于判断课程状态
   period: number; // 节次 (1-8)
-  duration: number; // 持续时间（节数）
+  duration: number; // 持续节数
   time: string; // "HH:mm-HH:mm"
   course: string;
   teacher: string;
@@ -28,7 +29,7 @@ export interface SpotlightItem {
   lab_id: number;
   lab: string;
   capacity: number;
-  spotlight: SpotlightCourse[] | null; // 改为数组，包含今天所有课程
+  spotlight: SpotlightCourse[] | null; // 今日课程列表
 }
 
 export interface KPIData {
@@ -40,7 +41,7 @@ export interface KPIData {
   labCount: number;
   activeLabs: number;
   completionRate: number; // 0~1
-  totalPlannedAttendance: number; // 本学期总预计出勤人数
+  totalPlannedAttendance: number; // 本学期预计出勤总数
   totalClassHours: number; // 本学期总课时
   totalCourses: number; // 本学期总课程
   currentClassHours: number; // 截止目前已上课时数
@@ -51,8 +52,8 @@ export interface KPIData {
 
 export interface HeatmapData {
   labs: string[];     // ["全部","西116",...]
-  matrix: number[][]; // row=P1..P8, col=weekday(1..7)  固定 8x7
-  weeks: number[];    // 周数数组（兼容性保留）
+  matrix: number[][]; // row=P1..P8, col=weekday(1..7)，固定 8x7
+  weeks: number[];    // 周数数组（兼容保留）
 }
 
 export type ProjectStatus = 'reviewing' | 'ongoing' | 'done';
@@ -92,23 +93,23 @@ export interface RenderResponse {
     topProjects: Array<{ categories: string[]; values: number[] }>; // 热门项目排行榜
     gaugeData: { value: number }; // 课容量利用率仪表盘数据
     teacherWorkload: Array<{ categories: string[]; values: number[] }>; // 教师工作量分析
-    courseMajorDistribution: Array<{ name: string; value: number }>; // 课程专业占比统计（环形图）- 兼容旧格式
-    courseMajorStacked: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 课程-专业堆叠图 - 兼容旧格式
-    majorCourseStacked: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 专业-课程堆叠图 - 兼容旧格式
-    majorTrend: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 专业活跃度趋势 - 兼容旧格式
-    courseCoverage: Array<{ name: string; majors: number; classes: number; students: number }>; // 课程覆盖度分析 - 兼容旧格式
-    // 新增：所有数据（供前端选择）
-    courseMajorDistributionMap?: Record<string, Array<{ name: string; value: number }>>; // 所有课程的专业占比数据映射
-    courseMajorStackedAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有课程的堆叠图数据
-    majorCourseStackedAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有专业的堆叠图数据
-    majorTrendAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有专业的趋势数据
-    courseCoverageAll?: Array<{ name: string; majors: number; classes: number; students: number }>; // 所有课程的覆盖度数据
-    allCourses?: string[]; // 所有课程列表
-    allMajors?: string[]; // 所有专业列表
+    courseMajorDistribution: Array<{ name: string; value: number }>; // 课程专业占比（旧格式）
+    courseMajorStacked: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 课程-专业堆叠图（旧格式）
+    majorCourseStacked: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 专业-课程堆叠图（旧格式）
+    majorTrend: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 专业活跃度趋势（旧格式）
+    courseCoverage: Array<{ name: string; majors: number; classes: number; students: number }>; // 课程覆盖度分析（旧格式）
+    // 新增：完整数据（供前端筛选）
+    courseMajorDistributionMap?: Record<string, Array<{ name: string; value: number }>>; // 所有课程专业占比
+    courseMajorStackedAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有课程堆叠图
+    majorCourseStackedAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有专业堆叠图
+    majorTrendAll?: { categories: string[]; series: Array<{ name: string; data: number[] }> }; // 所有专业趋势
+    courseCoverageAll?: Array<{ name: string; majors: number; classes: number; students: number }>; // 所有课程覆盖度
+    allCourses?: string[]; // 课程列表
+    allMajors?: string[]; // 专业列表
   };
 }
 
-// 大屏显示配置类型
+// 大屏显示配置类型。
 export type ScreenDisplayMode = 'fixed' | 'adaptive';
 
 export interface ScreenFixedConfig {
@@ -117,7 +118,7 @@ export interface ScreenFixedConfig {
   scale: number;
 }
 
-// 可视化配置类型
+// 可视化配置类型。
 export interface VisualizationConfig {
   kpi: {
     available: string[];
@@ -139,7 +140,7 @@ export interface VisualizationConfig {
   };
 }
 
-// KPI指标类型
+// KPI 指标类型。
 export type KPIMetric = 
   | 'courseTotals'      // 课程总数
   | 'attendance'        // 出勤人数
@@ -157,7 +158,7 @@ export type KPIMetric =
   | 'involvedClasses'   // 本学期总班级数
   | 'avgStudentsPerCourse' // 平均每课程参与人次
 
-// 数据分析结果类型
+// 数据分析结果类型。
 export type DataAnalysisType = 
   | 'labUtilization'        // 实验室使用率分析
   | 'projectStatusDist'     // 项目状态分布分析
@@ -168,7 +169,7 @@ export type DataAnalysisType =
   | 'resourceAllocation'    // 资源分配分析
   | 'performanceMetrics'    // 性能指标分析
 
-// 数据分析结果配置
+// 数据分析结果配置。
 export interface DataAnalysisResult {
   type: DataAnalysisType
   title: string
@@ -181,7 +182,7 @@ export interface DataAnalysisResult {
   }
 }
 
-// 筛选条件
+// 筛选条件。
 export interface AnalysisFilters {
   timeRange?: {
     start: string
@@ -190,7 +191,7 @@ export interface AnalysisFilters {
   labId?: string
 }
 
-// 图表类型
+// 图表类型。
 export type ChartType = 
   | 'heatmap'    // 热力图
   | 'pie'        // 饼图

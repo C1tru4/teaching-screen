@@ -1,3 +1,4 @@
+// 功能：公告与横幅配置服务。
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';

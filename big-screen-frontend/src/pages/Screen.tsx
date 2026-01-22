@@ -1,3 +1,4 @@
+// 功能：大屏主页面（拉取数据并组织各组件展示）。
 import { useEffect, useMemo, useState } from 'react'
 import { fetchRender, fetchAllConfig, type Scope } from '../lib/api'
 import type { RenderResponse, SpotlightItem, Project, ScreenDisplayMode, ScreenFixedConfig, VisualizationConfig, KPIMetric } from '../lib/types'
@@ -25,31 +26,31 @@ export default function Screen() {
 
   const labsOptions = useMemo(() => data?.heatmap?.labs ?? ['全部'], [data])
   
-  // 实验室名称到ID的映射 - 从热力图数据获取
+  // 实验室名称到 ID 的映射（来自热力图）。
   const labNameToId = useMemo(() => {
     const mapping: Record<string, number> = {}
     if (data?.heatmap?.labs) {
-      // 跳过第一个"全部"
+      // 跳过第一个“全部”。
       data.heatmap.labs.slice(1).forEach((labName, index) => {
-        mapping[labName] = index + 1 // 实验室ID从1开始
+        mapping[labName] = index + 1 // 实验室 ID 从 1 开始
       })
     }
     return mapping
   }, [data?.heatmap?.labs])
 
-  // ID到实验室名称的映射 - 从热力图数据获取
+  // ID 到实验室名称的映射（来自热力图）。
   const labIdToName = useMemo(() => {
     const mapping: Record<number, string> = {}
     if (data?.heatmap?.labs) {
-      // 跳过第一个"全部"
+      // 跳过第一个“全部”。
       data.heatmap.labs.slice(1).forEach((labName, index) => {
-        mapping[index + 1] = labName // 实验室ID从1开始
+        mapping[index + 1] = labName // 实验室 ID 从 1 开始
       })
     }
     return mapping
   }, [data?.heatmap?.labs])
 
-  // 监听窗口大小变化
+  // 监听窗口大小变化。
   useEffect(() => {
     const handleResize = () => {
       setWindowHeight(window.innerHeight)
@@ -62,7 +63,7 @@ export default function Screen() {
   useEffect(() => {
     let mounted = true
     
-    // 加载大屏显示配置（使用合并接口）
+    // 加载大屏显示配置（合并接口）。
     const loadScreenConfig = async () => {
       try {
         const allConfig = await fetchAllConfig()
@@ -77,7 +78,7 @@ export default function Screen() {
       } catch (error) {
         console.warn('Failed to load screen config:', error)
         if (mounted) {
-          // 使用默认配置
+          // 失败时使用默认配置。
           setScreenMode('adaptive')
           setScreenFixedConfig({ width: 1920, height: 1080, scale: 100 })
           setVisualizationConfig({
@@ -124,7 +125,7 @@ export default function Screen() {
     
     loadScreenConfig()
     
-    // 加载数据 - 增加防抖时间，减少重复请求
+    // 加载数据（防抖 300ms）。
     setLoading(true); setError(null)
     const timer = setTimeout(() => {
       fetchRender({ lab, scope })
@@ -141,7 +142,7 @@ export default function Screen() {
           }
         })
         .finally(() => { if (mounted) setLoading(false) })
-    }, 300) // 增加到300ms防抖，减少重复请求
+    }, 300)
     
     return () => { 
       mounted = false
@@ -149,7 +150,7 @@ export default function Screen() {
     }
   }, [lab, scope])
 
-  // 版本号检查：每 5 秒检查一次版本号变化
+  // 版本号检查：每 5 秒检查一次变化。
   useEffect(() => {
     const checkVersion = async () => {
       try {
@@ -223,7 +224,7 @@ export default function Screen() {
         }}
       >
         {screenMode === 'adaptive' ? (
-          /* 相对比例布局 - 自适应屏幕大小 */
+          /* 自适应布局 */
           <>
             {/* 左列：实验室卡片 */}
             <section className="column-container">
@@ -270,7 +271,7 @@ export default function Screen() {
             </section>
           </>
         ) : (
-          /* 固定布局 - 使用相对比例 */
+          /* 固定布局（比例） */
           <>
             {/* 左列：实验室卡片 */}
             <section className="column-container">
@@ -318,7 +319,7 @@ export default function Screen() {
           </>
         )}
 
-        {/* 原始固定布局代码 - 已注释，方便后续切换回固定版本 */}
+        {/* 固定布局示例（保留备查） */}
         {/* 
         <div className="grid gap-4" style={{ gridTemplateColumns: '3fr 4fr 3fr', height: 'calc(100vh - 72px)' }}>
           <section className="h-full">
@@ -358,7 +359,7 @@ export default function Screen() {
 }
 
 function defaultMatrix() {
-  // 8x7 全 0
+  // 生成 8x7 的 0 矩阵。
   return Array.from({ length: 8 }, () => Array.from({ length: 7 }, () => 0))
 }
 

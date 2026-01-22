@@ -1,7 +1,9 @@
+// 功能：解析 Markdown 标题并生成目录数据。
 import { TitleItem } from '../types/UserGuide'
 
+// 参数：markdown 为原始 Markdown 字符串。
 export const extractTitles = (markdown: string): TitleItem[] => {
-  // 先清理换行符，统一处理
+  // 统一换行符，避免平台差异。
   const cleanMarkdown = markdown.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   const lines = cleanMarkdown.split('\n')
   const titles: TitleItem[] = []
@@ -27,20 +29,20 @@ export const extractTitles = (markdown: string): TitleItem[] => {
   console.log('extractTitles: Total titles found:', titles.length)
   console.log('extractTitles: All titles:', titles)
   
-  // 暂时返回所有标题，不进行优化
+  // 当前直接返回全部标题（保持层级信息）。
   return titles
 }
 
 const optimizeTitles = (titles: TitleItem[]): TitleItem[] => {
-  // 暂时返回所有标题，不进行优化，确保目录能正常显示
+  // 预留扩展：必要时可在此精简目录结构。
   return titles
 }
 
 export const generateId = (text: string): string => {
   return text
-    .replace(/[^\w\s\u4e00-\u9fff-]/g, '') // 保留中文、英文、数字、空格、连字符
+    .replace(/[^\w\s\u4e00-\u9fff-]/g, '') // 保留中英文、数字与连字符
     .replace(/\s+/g, '-') // 空格替换为连字符
     .toLowerCase()
-    .replace(/^-+|-+$/g, '') // 移除开头和结尾的连字符
+    .replace(/^-+|-+$/g, '') // 移除首尾连字符
     .substring(0, 50) // 限制长度
 }

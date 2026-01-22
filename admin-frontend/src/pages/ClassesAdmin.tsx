@@ -1,3 +1,4 @@
+// 功能：班级列表管理（增删改查）与批量导入。
 import { useEffect, useMemo, useState } from 'react'
 import { Button, Form, Input, InputNumber, Modal, Table, message, Space, Tabs } from 'antd'
 import { PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
@@ -6,9 +7,10 @@ import BatchUploader from '../components/BatchUploader'
 import { fetchClasses, createClass, updateClass, deleteClass, batchCreateClasses } from '../api/admin'
 import type { Class } from '../api/admin'
 
-// 从班级名称中提取专业和班号
+// 从班级名称中解析专业与班号。
+// 参数: name 班级名称字符串。
 function parseClassName(name: string): { major: string; classNum: number } {
-  // 尝试匹配"专业名+数字+班"的格式，如"计算机1班"、"计算机科学与技术2班"
+  // 支持“专业名+数字+班”的格式，例如“计算机1班”。
   const match = name.match(/^(.+?)(\d+)班$/)
   if (match) {
     return {
@@ -16,7 +18,7 @@ function parseClassName(name: string): { major: string; classNum: number } {
       classNum: parseInt(match[2], 10)
     }
   }
-  // 如果无法解析，返回默认值
+  // 解析失败时返回空值，避免影响排序。
   return {
     major: '',
     classNum: 0
@@ -44,19 +46,19 @@ export default function ClassesAdmin() {
     }
   }
 
-  // 排序：先按专业，再按班号
+  // 排序：先按专业，再按班号。
   const sortedList = useMemo(() => {
     return [...list].sort((a, b) => {
-      // 优先使用数据库中的专业字段，如果没有则从班级名称中提取
+      // 优先使用专业字段，缺失时从名称解析。
       const majorA = a.major || parseClassName(a.name).major
       const majorB = b.major || parseClassName(b.name).major
       
-      // 先按专业排序
+      // 按专业排序。
       if (majorA !== majorB) {
         return majorA.localeCompare(majorB, 'zh-CN')
       }
       
-      // 同专业内按班号排序
+      // 同专业内按班号排序。
       const numA = parseClassName(a.name).classNum
       const numB = parseClassName(b.name).classNum
       return numA - numB
@@ -78,7 +80,7 @@ export default function ClassesAdmin() {
     try {
       if (v.id && v.id !== 0) {
         const { id, ...payload } = v
-        // 将 null 转换为 undefined，以匹配 API 类型
+        // 参数: v 表单值。将 null 转为 undefined 以匹配 API 类型。
         const updatePayload = {
           ...payload,
           major: payload.major ?? undefined
@@ -88,7 +90,7 @@ export default function ClassesAdmin() {
         message.success('已保存')
       } else {
         const { id, ...payload } = v
-        // 将 null 转换为 undefined，以匹配 API 类型
+        // 参数: v 表单值。将 null 转为 undefined 以匹配 API 类型。
         const createPayload = {
           ...payload,
           major: payload.major ?? undefined
@@ -130,16 +132,16 @@ export default function ClassesAdmin() {
 
     const result = await batchCreateClasses(classes)
     
-    // 保存错误信息到状态，用于在下方显示
+    // 保存错误信息用于提示。
     if (result.failed > 0 && result.errors && result.errors.length > 0) {
-      // 将字符串数组转换为统一格式
+      // 将错误列表转换为统一结构。
       const formattedErrors = result.errors.map((error: string, idx: number) => {
-        // 尝试解析错误信息，提取行号和错误内容
+        // 解析错误信息，提取班级名称与原因。
         const match = error.match(/^(.+?):\s*(.+)$/)
         if (match) {
           const className = match[1]
           const message = match[2]
-          // 尝试从原始数据中找到对应的行号
+          // 通过班级名称定位原始行号，便于定位问题行。
           const rowIndex = data.findIndex(row => {
             const name = row.name || row['班级名称'] || row['班级']
             return name === className
@@ -172,7 +174,7 @@ export default function ClassesAdmin() {
       key: 'index',
       width: 80,
       render: (_: any, __: any, index: number) => {
-        // 计算全局序号：当前页数 * 每页条数 + 当前索引 + 1
+        // 计算全局序号：页码 * 页大小 + 行索引 + 1。
         const pageSize = 15
         return (currentPage - 1) * pageSize + index + 1
       },

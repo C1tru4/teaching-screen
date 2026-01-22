@@ -1,3 +1,4 @@
+// 功能：可展开的图例组件。
 import React, { useState } from 'react';
 
 interface LegendItem {
@@ -17,7 +18,7 @@ export default function ExpandableLegend({ items, onToggle, maxVisible = 3 }: Ex
   
   if (items.length === 0) return null;
   
-  // 如果maxVisible是Infinity，直接显示所有图例，不需要展开功能
+  // maxVisible 为 Infinity 时直接展示全部图例。
   const showAllDirectly = maxVisible === Infinity;
   const visibleItems = showAllDirectly ? items : (expanded ? items : items.slice(0, maxVisible));
   const hasMore = !showAllDirectly && items.length > maxVisible;

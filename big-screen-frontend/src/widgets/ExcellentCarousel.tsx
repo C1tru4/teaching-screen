@@ -1,8 +1,9 @@
+// 功能：优秀项目轮播展示（含论文与成员信息）。
 import { useState, useRef, useEffect } from 'react'
 import type { Project } from '../lib/types'
 import PDFViewer from '../components/PDFViewer'
 
-// 团队成员轮播组件
+// 团队成员轮播组件。参数: members 成员列表。
 function TeamMembersCarousel({ members }: { members: string[] }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const maxVisible = 3
@@ -93,11 +94,11 @@ function ProjectDetailModal({ project, open, onClose, onOpenPaper, onOpenVideo }
 }) {
   if (!project) return null
 
-  // 确定是否有论文或视频
+  // 判断是否有论文或视频。
   const hasPaper = !!project.paper_url
   const hasVideo = !!project.video_url
 
-  // 默认显示模式：如果有论文就显示论文，如果只有视频就显示视频
+  // 默认显示：有论文优先论文，否则显示视频。
   const [displayMode, setDisplayMode] = useState<'paper' | 'video'>(() => {
     if (hasPaper) return 'paper'
     if (hasVideo) return 'video'
@@ -109,7 +110,7 @@ function ProjectDetailModal({ project, open, onClose, onOpenPaper, onOpenVideo }
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
 
-  // 当项目或显示模式变化时，重置视频状态
+  // 项目或显示模式变化时重置视频状态。
   useEffect(() => {
     if (displayMode === 'video' && videoRef.current) {
       videoRef.current.currentTime = 0
@@ -120,7 +121,7 @@ function ProjectDetailModal({ project, open, onClose, onOpenPaper, onOpenVideo }
     }
   }, [displayMode, project?.id])
 
-  // 当关闭弹窗时，暂停视频
+  // 关闭弹窗时暂停视频。
   useEffect(() => {
     if (!open && videoRef.current) {
       videoRef.current.pause()
@@ -524,7 +525,7 @@ function ProjectDetailModal({ project, open, onClose, onOpenPaper, onOpenVideo }
   )
 }
 
-// 视频详细查看组件
+// 视频详细查看组件。参数: project 项目, open 是否显示, onClose 关闭回调。
 function VideoDetailModal({ project, open, onClose }: { project: Project | null; open: boolean; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -532,7 +533,7 @@ function VideoDetailModal({ project, open, onClose }: { project: Project | null;
   const [duration, setDuration] = useState(0)
   const [volume, setVolume] = useState(1)
 
-  // 当关闭弹窗时，暂停视频
+  // 关闭弹窗时暂停视频。
   useEffect(() => {
     if (!open && videoRef.current) {
       videoRef.current.pause()
@@ -743,7 +744,7 @@ function VideoDetailModal({ project, open, onClose }: { project: Project | null;
   )
 }
 
-// 论文详细查看组件
+// 论文详细查看组件。参数: project 项目, open 是否显示, onClose 关闭回调。
 function PaperDetailModal({ project, open, onClose }: { project: Project | null; open: boolean; onClose: () => void }) {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -780,7 +781,7 @@ function PaperDetailModal({ project, open, onClose }: { project: Project | null;
             title={project.paper_filename || '论文预览'}
             onError={(e) => {
               console.error('PDF详细查看加载失败:', e);
-              // 可以在这里添加错误处理逻辑
+              // 预留：可在此补充错误提示。
             }}
             onLoad={(e) => {
               console.log('PDF详细查看加载成功:', `/api/projects/${project.id}/paper`);

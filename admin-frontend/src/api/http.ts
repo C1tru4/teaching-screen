@@ -1,6 +1,7 @@
+// 功能：创建 Axios 实例并根据环境选择 API_BASE。
 import axios, { AxiosResponse } from 'axios'
 
-// Web部署方案：根据环境自动选择API地址
+// 优先级：Electron 注入 > VITE_API_BASE > 默认开发/生产地址。
 const injected = (globalThis as any)?.electron?.API_BASE
 const isProduction = import.meta.env.PROD
 export const API_BASE = injected ?? (import.meta.env.VITE_API_BASE ?? (isProduction ? '/api' : 'http://localhost:3000/api'))

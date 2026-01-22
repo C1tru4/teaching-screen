@@ -1,3 +1,4 @@
+// 功能：公告与横幅相关接口。
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { AnnouncementService } from './announcement.service';
 import { BannerLevel } from './entities/banner.entity';

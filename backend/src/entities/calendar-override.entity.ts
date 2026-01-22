@@ -1,3 +1,4 @@
+// 功能：日历调休配置实体。
 import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity('calendar_override')

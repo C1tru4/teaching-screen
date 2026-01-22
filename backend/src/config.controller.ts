@@ -1,3 +1,4 @@
+// 功能：系统配置相关接口。
 import { BadRequestException, Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import { ConfigService } from './config.service';
 

@@ -1,3 +1,4 @@
+// 功能：大屏渲染数据接口。
 import { Controller, Get, Query } from '@nestjs/common';
 import { RenderService } from './render.service';
 

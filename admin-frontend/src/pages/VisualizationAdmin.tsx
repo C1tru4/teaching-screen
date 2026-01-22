@@ -1,3 +1,4 @@
+// 功能：配置大屏可视化 KPI 与图表布局。
 import { useEffect, useState } from 'react'
 import { Button, Card, Form, message, Radio, Select, Space, Switch, Typography, Divider, Row, Col, Input } from 'antd'
 import { SaveOutlined, ReloadOutlined } from '@ant-design/icons'
@@ -7,7 +8,7 @@ import type { VisualizationConfig, KPIMetric, ChartType } from '../types'
 
 const { Title, Text } = Typography
 
-// KPI指标配置
+// KPI 指标选项。
 const KPI_OPTIONS: Array<{ value: KPIMetric; label: string; description: string }> = [
   { value: 'courseTotals', label: '课程总数', description: '当前学期的课程总数' },
   { value: 'currentClassHours', label: '已上课时数', description: '截止目前已上的课时数' },
@@ -26,7 +27,7 @@ const KPI_OPTIONS: Array<{ value: KPIMetric; label: string; description: string 
   { value: 'avgStudentsPerCourse', label: '平均每课程参与人次', description: '总参与人数除以课程总数' }
 ]
 
-// 图表类型配置
+// 图表类型选项。
 const CHART_OPTIONS: Array<{ value: ChartType; label: string; description: string; defaultTitle: string }> = [
   { value: 'heatmap', label: '实验室使用热力图', description: '按星期和时段展示实验室使用密度分布', defaultTitle: '实验室使用热力图' },
   { value: 'pie', label: '项目状态分布 (饼图)', description: '各项目状态占比分布情况', defaultTitle: '项目状态分布' },
@@ -72,7 +73,7 @@ export default function VisualizationAdmin() {
       setConfig(values)
       message.success('配置保存成功')
       
-      // 自动刷新大屏
+      // 自动刷新大屏数据。
       try {
         await triggerScreenRefresh()
         message.success('大屏数据已更新')
@@ -120,7 +121,7 @@ export default function VisualizationAdmin() {
 
       <div style={{ transform: 'scale(0.95)', transformOrigin: 'top left' }}>
       <Form form={form} layout="vertical" initialValues={config}>
-        {/* 主要配置区域 - 左右并排 */}
+        {/* 主配置区：左右两列 */}
         <Row gutter={24} style={{ marginBottom: 16 }}>
           {/* 左侧：KPI 配置 */}
           <Col span={12}>
@@ -156,7 +157,7 @@ export default function VisualizationAdmin() {
             </Card>
           </Col>
 
-          {/* 右侧：中间部分配置 */}
+          {/* 右侧：中间区域配置 */}
           <Col span={12}>
             <Card title="中间部分展示配置" style={{ height: '100%' }}>
               <Form.Item
@@ -218,7 +219,7 @@ export default function VisualizationAdmin() {
                                     placeholder="选择图表类型"
                                     style={{ width: '100%' }}
                                     onChange={(value) => {
-                                      // 当选择图表类型时，自动填充默认标题
+                                    // 选择图表类型后，自动填充默认标题。
                                       const selectedOption = CHART_OPTIONS.find(option => option.value === value);
                                       if (selectedOption) {
                                         form.setFieldValue(['middleSection', 'smallCharts', 'charts', index, 'title'], selectedOption.defaultTitle);
@@ -242,7 +243,7 @@ export default function VisualizationAdmin() {
                                 >
                                   <Input placeholder="输入图表标题" />
                                 </Form.Item>
-                                {/* 不再需要选择课程/专业，后端会生成所有数据，前端自己选择 */}
+                                {/* 图表数据由后端提供，这里仅选择类型与标题 */}
                               </Card>
                             </Col>
                           ))}
@@ -258,7 +259,7 @@ export default function VisualizationAdmin() {
           </Col>
         </Row>
 
-        {/* 预览说明 */}
+        {/* 配置说明 */}
         <Card title="配置说明">
           <div style={{ lineHeight: '1.6' }}>
             <p><strong>KPI 指标：</strong>从可用指标中选择3个在大屏顶部显示</p>

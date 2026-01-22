@@ -1,5 +1,7 @@
+// 功能：根据滚动位置返回当前激活的标题 ID。
 import { useEffect, useState, RefObject } from 'react'
 
+// 参数：contentRef 为可滚动内容容器。
 export const useScrollSpy = (contentRef: RefObject<HTMLElement>) => {
   const [activeId, setActiveId] = useState<string>('')
   
@@ -22,7 +24,7 @@ export const useScrollSpy = (contentRef: RefObject<HTMLElement>) => {
     const contentElement = contentRef.current
     contentElement?.addEventListener('scroll', handleScroll)
     
-    // 初始检查
+    // 初始化时同步一次状态。
     handleScroll()
     
     return () => contentElement?.removeEventListener('scroll', handleScroll)

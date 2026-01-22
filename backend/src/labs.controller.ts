@@ -1,3 +1,4 @@
+// 功能：实验室与课表相关接口。
 import { Body, Controller, Get, Param, Patch, Post, Put, Query, BadRequestException } from '@nestjs/common';
 import { LabsService } from './labs.service';
 
@@ -66,19 +67,19 @@ export class LabsController {
     for (let i = 0; i < body.sessions.length; i++) {
       try {
         const session = body.sessions[i]
-        // 验证必填字段
+        // 验证必填字段。
         if (!session.date || !session.period || !session.course || !session.teacher) {
           errors.push({ index: i + 1, message: '日期、节次、课程名称、教师为必填项' })
           continue
         }
         
-        // 验证教室字段（必填）
+        // 验证教室字段（必填）。
         if (!session.labId && !(session as any)['教室'] && !(session as any)['实验室'] && !session.lab) {
           errors.push({ index: i + 1, field: 'lab', message: '教室字段为必填项，请指定教室名称或ID' })
           continue
         }
         
-        // 解析实验室：必须指定教室（labId 或 教室/实验室名字）
+        // 解析实验室：必须指定教室（labId 或 名称）。
         let resolvedLabId: number
         if (session.labId) {
           resolvedLabId = Number(session.labId)
@@ -91,18 +92,18 @@ export class LabsController {
           }
           resolvedLabId = id
         } else {
-          // 这种情况不应该发生，因为前面已经验证了教室字段必填
+          // 理论上不会发生（前面已校验必填）。
           errors.push({ index: i + 1, field: 'lab', message: '教室字段为必填项，请指定教室名称或ID' })
           continue
         }
 
-        // 验证日期格式
+        // 验证日期格式。
         if (!/^\d{4}-\d{2}-\d{2}$/.test(session.date)) {
           errors.push({ index: i + 1, field: 'date', message: '日期格式错误，应为YYYY-MM-DD' })
           continue
         }
 
-        // 验证节次
+        // 验证节次。
         if ((session as any).period < 1 || (session as any).period > 8) {
           errors.push({ index: i + 1, field: 'period', message: '节次必须在1-8之间' })
           continue
@@ -132,7 +133,7 @@ export class LabsController {
       }
     }
 
-    // dryRun 模式：仅返回校验结果，不落库
+    // dryRun 模式：仅返回校验结果，不落库。
     if (dryRun === 'true') {
       return {
         success: results.length,
@@ -141,12 +142,11 @@ export class LabsController {
       }
     }
 
-    // 如果验证通过，保存到数据库
-    // 改为增量插入，不再按周覆盖
+    // 验证通过后保存到数据库（增量插入，不按周覆盖）。
     const result = await this.svc.insertSessionsRaw(results)
     const saveErrors = result.errors || []
     
-    // 合并验证错误和保存错误
+    // 合并验证错误与保存错误。
     const allErrors = [...errors, ...saveErrors]
     
     if (allErrors.length > 0) {

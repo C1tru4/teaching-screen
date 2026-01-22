@@ -1,3 +1,4 @@
+// 功能：项目数据服务（查询、更新、清理与文件处理）。
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, Not } from 'typeorm';
@@ -31,7 +32,7 @@ export class ProjectsService {
     if (year) qb.where('p.year = :y', { y: year });
     const items = await qb.orderBy('p.id', 'DESC').getMany();
     
-    // 转换所有项目的JSON字符串为数组
+    // 解析 JSON 成员列表。
     const processedItems = items.map(item => {
       if (item.team_members_json) {
         try {
@@ -52,7 +53,7 @@ export class ProjectsService {
     const p = await this.repo.findOneBy({ id });
     if (!p) throw new BadRequestException('project not found');
     
-    // 转换JSON字符串为数组
+    // 解析 JSON 成员列表。
     if (p.team_members_json) {
       try {
         (p as any).team_members = JSON.parse(p.team_members_json);
@@ -82,7 +83,7 @@ export class ProjectsService {
     assertStatus(status);
     const year = payload.year ?? semesterYear(new Date(semesterStartMondayISO));
     
-    // 保持原始状态，不强制修改
+    // 保持传入状态，不强制修改。
     const finalStatus = status;
     
     const ent = this.repo.create({
@@ -113,7 +114,7 @@ export class ProjectsService {
       assertStatus(body.status); 
       p.status = body.status;
       
-      // 自动设置立项和完成时间
+      // 自动设置立项/完成时间。
       const now = new Date().toISOString();
       if (body.status === 'ongoing' && !p.project_start_date) {
         p.project_start_date = now;
@@ -124,7 +125,7 @@ export class ProjectsService {
     }
     if (body.excellent !== undefined) {
       p.excellent = !!body.excellent;
-      // 如果设为优秀，自动设置为已完成状态
+      // 设为优秀时自动切换为已完成。
       if (body.excellent && p.status !== 'done') {
         p.status = 'done';
         if (!p.project_end_date) {
@@ -157,7 +158,7 @@ export class ProjectsService {
       const result = await this.repo.delete({ year });
       return { deletedCount: result.affected || 0, year };
     } else {
-      // 删除所有记录，但使用更安全的方式
+      // 删除所有记录（更安全的删除方式）。
       const result = await this.repo.createQueryBuilder()
         .delete()
         .execute();
@@ -178,7 +179,7 @@ export class ProjectsService {
       .where('(p.year < :y OR p.year = :y) AND p.excellent = 1', { y: currentYear })
       .orderBy('p.year', 'DESC').addOrderBy('p.id', 'DESC').getMany();
     
-    // 转换所有项目的JSON字符串为数组
+    // 解析 JSON 成员列表。
     return items.map(item => {
       if (item.team_members_json) {
         try {
@@ -209,52 +210,52 @@ export class ProjectsService {
   }
 
   async clearAllData() {
-    // 清空数据表，保留配置表
+    // 清空业务数据，保留配置表。
     // 数据表：sessions, projects, banner, classes
     // 配置表：labs, config_kv, calendar_override
     
-    // 清空项目数据
+    // 清空项目数据。
     await this.repo.clear()
     
-    // 清空课表数据（通过SQL直接执行）
+    // 清空课表数据（SQL 直接执行）。
     await this.repo.query('DELETE FROM sessions')
     
-    // 清空横幅数据
+    // 清空横幅数据。
     await this.repo.query('DELETE FROM banner')
     
-    // 清空班级数据
+    // 清空班级数据。
     await this.classService.clearAllClasses()
     
-    // 重置自增ID
+    // 重置自增 ID。
     await this.repo.query('DELETE FROM sqlite_sequence WHERE name IN ("projects", "sessions", "banner", "classes")')
     
-    // 物理删除上传文件内容，但保留目录结构
+    // 清理上传文件内容但保留目录结构。
     await this.dataManager.clearUploadsContent();
   }
 
   async clearProjectsData(year?: number) {
     if (year) {
-      // 删除指定年份的项目数据
+      // 删除指定年份的项目数据。
       await this.repo.delete({ year })
     } else {
-      // 删除所有项目数据
+      // 删除所有项目数据。
       await this.repo.clear()
     }
   }
 
   async clearAllVideos(): Promise<{ deletedCount: number; fileCount: number }> {
-    // 获取所有有视频的项目
+    // 获取所有有视频的项目。
     const projects = await this.repo.find({
       where: { video_url: Not(IsNull()) }
     });
 
     let fileCount = 0;
 
-    // 删除所有视频文件
+    // 删除所有视频文件。
     for (const project of projects) {
       if (project.video_url) {
         try {
-          // 从 /uploads/projects/2024/项目名称/项目名称演示视频.mp4 提取相对路径
+          // 从 /uploads/projects/... 提取相对路径。
           let relativePath: string;
           const urlWithoutQuery = project.video_url.split('?')[0];
           

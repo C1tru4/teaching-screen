@@ -1,3 +1,4 @@
+// 功能：页面标题与工具区的统一头部。
 import { Typography, Space } from 'antd'
 const { Title } = Typography
 

@@ -1,3 +1,4 @@
+// 功能：实验室与课表数据服务（查询、更新、批量导入）。
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, In, Repository } from 'typeorm';
@@ -20,7 +21,7 @@ export class LabsService {
   listLabs() { return this.labsRepo.find({ order: { id: 'ASC' } }); }
 
   /**
-   * 获取所有不重复的课程名称列表
+   * 获取所有不重复的课程名称列表。
    */
   async listCourses(): Promise<string[]> {
     const sessions = await this.sessRepo.find({
@@ -49,7 +50,7 @@ export class LabsService {
     const date = new Date(anyDateISO);
     if (isNaN(date.getTime())) throw new BadRequestException('invalid date');
     
-    // 计算本周一
+    // 计算本周一。
     const dayOfWeek = date.getDay(); // 0=周日, 1=周一, ..., 6=周六
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const monday = new Date(date);
@@ -70,7 +71,7 @@ export class LabsService {
       order: { date: 'ASC', period: 'ASC' }
     });
 
-    // 组装
+    // 组装按天的课表结构。
     const days = Array.from({length:7},(_,i)=>{
       const d=new Date(monday); d.setDate(monday.getDate()+i);
       return {
@@ -106,7 +107,7 @@ export class LabsService {
     const date = new Date(anyDateISO);
     if (isNaN(date.getTime())) throw new BadRequestException('invalid date');
     
-    // 计算本周一
+    // 计算本周一。
     const dayOfWeek = date.getDay(); // 0=周日, 1=周一, ..., 6=周六
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const monday = new Date(date);
@@ -123,19 +124,19 @@ export class LabsService {
     const inWeek = (iso: string) => iso>=toISO(monday) && iso<=toISO(sunday);
     const validPeriods = new Set([1,2,3,4,5,6,7,8]);
 
-    // 删除该周旧记录
+    // 删除该周旧记录。
     const olds = await this.sessRepo.find({ where: { lab_id: labId, date: Between(toISO(monday), toISO(sunday)) }});
     if (olds.length) await this.sessRepo.remove(olds);
 
-    // 插入新记录
+    // 插入新记录。
     const rows: SessionEntity[] = [];
     for (const it of body.sessions) {
       if (!it) continue;
       if (!inWeek(it.date)) throw new BadRequestException(`date ${it.date} not in target week`);
       if (!validPeriods.has(it.period)) throw new BadRequestException(`invalid period ${it.period}`);
       const capacity = Math.floor(Number(it.capacity ?? lab.capacity));
-      const duration = Math.max(1, Math.floor(Number(it.duration ?? 2))); // 默认2课时
-      // 计算 planned：如果同时提供了 planned 和 classNames，优先使用 planned；如果只有 classNames，则根据班级计算
+      const duration = Math.max(1, Math.floor(Number(it.duration ?? 2))); // 默认 2 课时
+      // 计算 planned：优先使用 planned；仅有 classNames 时按班级计算。
       let finalPlanned = 0;
       let classNames: string | null = null;
       
@@ -143,11 +144,11 @@ export class LabsService {
         classNames = it.classNames.trim();
       }
       
-      // 如果同时提供了 planned 和 classNames，优先使用 planned
+      // 优先使用 planned。
       if (it.planned !== undefined && it.planned !== null) {
         finalPlanned = Math.max(0, Math.floor(Number(it.planned)));
       } else if (classNames) {
-        // 如果只提供了 classNames，根据班级计算人数
+        // 仅提供 classNames 时根据班级计算人数。
         try {
           finalPlanned = await this.classService.calculateTotalStudents(classNames);
         } catch (error: any) {
@@ -178,12 +179,12 @@ export class LabsService {
 
   /**
    * 按行插入课程（不按周覆盖，不删除旧数据）。
-   * 容量取实验室容量；allow_makeup 根据 planned < capacity 计算。
-   * 如果提供了 classNames，则根据班级自动计算 planned；否则使用传入的 planned 值。
+   * 容量取实验室容量；allow_makeup 由 planned < capacity 计算。
+   * classNames 存在时按班级计算 planned；否则使用传入 planned。
    */
   async insertSessionsRaw(items: Array<{ labId: number; date: ISODate; period: PeriodIndex; course: string; teacher: string; content?: string; planned?: number; duration?: number; classNames?: string; }>) {
     if (!Array.isArray(items) || items.length === 0) return { inserted: 0, updated: 0, errors: [] }
-    // 预取实验室容量
+    // 预取实验室容量。
     const labIds = Array.from(new Set(items.map(i => i.labId)))
     const labs = await this.labsRepo.find({ where: { id: In(labIds) } })
     const idToCapacity = new Map<number, number>(labs.map(l => [l.id, l.capacity]))
@@ -212,7 +213,7 @@ export class LabsService {
         }
         const capacity = Math.floor(Number(cap))
         
-        // 计算 planned：如果同时提供了 planned 和 classNames，优先使用 planned；如果只有 classNames，则根据班级计算
+        // 计算 planned：优先使用 planned；仅有 classNames 时按班级计算。
         let planned = 0;
         let classNames: string | null = null;
         
@@ -220,11 +221,11 @@ export class LabsService {
           classNames = it.classNames.trim();
         }
         
-        // 如果同时提供了 planned 和 classNames，优先使用 planned
+        // 优先使用 planned。
         if (it.planned !== undefined && it.planned !== null) {
           planned = Math.max(0, Math.floor(Number(it.planned)));
         } else if (classNames) {
-          // 如果只提供了 classNames，根据班级计算人数
+          // 仅提供 classNames 时根据班级计算人数。
           try {
             planned = await this.classService.calculateTotalStudents(classNames);
           } catch (error: any) {
@@ -232,14 +233,14 @@ export class LabsService {
             continue
           }
         } else {
-          // 都没有提供，默认为0
+          // 都未提供时默认为 0。
           planned = 0;
         }
         
         const allow = planned < capacity ? 1 : 0
-        const duration = Math.max(1, Math.floor(Number(it.duration ?? 2))) // 默认2课时
+        const duration = Math.max(1, Math.floor(Number(it.duration ?? 2))) // 默认 2 课时
         
-        // 检查是否已存在相同的记录
+        // 检查是否已存在相同记录。
         let existing
         try {
           existing = await this.sessRepo.findOne({
@@ -255,7 +256,7 @@ export class LabsService {
         }
         
         if (existing) {
-          // 更新现有记录
+          // 更新现有记录。
           existing.course = String(it.course)
           existing.teacher = String(it.teacher)
           existing.content = it.content ?? null
@@ -267,7 +268,7 @@ export class LabsService {
           await this.sessRepo.save(existing)
           updated++
         } else {
-          // 创建新记录
+          // 创建新记录。
           const e = this.sessRepo.create({
             lab_id: it.labId,
             date: toISO(it.date),
@@ -294,10 +295,10 @@ export class LabsService {
 
   async clearTimetableData(labId?: number) {
     if (labId) {
-      // 删除指定教室的课表数据
+      // 删除指定教室的课表数据。
       await this.sessRepo.delete({ lab_id: labId })
     } else {
-      // 删除所有课表数据
+      // 删除所有课表数据。
       await this.sessRepo.clear()
     }
   }

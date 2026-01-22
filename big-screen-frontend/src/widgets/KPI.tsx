@@ -1,7 +1,8 @@
+// 功能：KPI 指标卡片展示。
 import type { KPIData, KPIMetric } from '../lib/types'
 import { AnimatedNumber } from '../components/AnimatedComponents'
 
-// KPI指标标签映射
+// KPI 指标标签映射。
 const KPI_LABELS: Record<KPIMetric, string> = {
   courseTotals: '学期开课数',
   attendance: '实验人次',
@@ -20,7 +21,7 @@ const KPI_LABELS: Record<KPIMetric, string> = {
   avgStudentsPerCourse: '平均每课程参与人次'
 };
 
-// KPI指标值获取函数
+// KPI 指标值读取。参数: data 指标数据, metric 指标类型。
 function getKPIValue(data: KPIData, metric: KPIMetric): number {
   switch (metric) {
     case 'courseTotals':

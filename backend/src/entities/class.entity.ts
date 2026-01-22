@@ -1,3 +1,4 @@
+// 功能：班级数据实体。
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('classes')

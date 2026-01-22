@@ -1,3 +1,4 @@
+// 功能：大屏“实验室聚焦”卡片与课表悬浮窗。
 import React, { useState, useRef, useEffect } from 'react'
 import type { SpotlightItem, SpotlightCourse } from '../lib/types'
 import LabScheduleModal from '../components/LabScheduleModal'
@@ -7,9 +8,9 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
   const [selectedLab, setSelectedLab] = useState<{ id: number; name: string } | null>(null)
   const [modalPosition, setModalPosition] = useState<{ x: number; y: number; cardHeight?: number }>({ x: 0, y: 0 })
   const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({})
-  const [currentTime, setCurrentTime] = useState(new Date()) // 用于实时更新状态
+  const [currentTime, setCurrentTime] = useState(new Date()) // 用于计算课程状态
 
-  // 每分钟更新一次当前时间，确保状态实时更新
+  // 每分钟更新一次当前时间，确保状态实时更新。
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date())
@@ -18,14 +19,15 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
     return () => clearInterval(interval)
   }, [])
 
+  // 打开课表悬浮窗。参数: labId 教室ID, labName 教室名称, event 点击事件。
   const handleCardClick = (labId: number, labName: string, event: React.MouseEvent) => {
-    // 获取被点击的教室卡片元素
+    // 获取被点击的教室卡片元素。
     const clickedCard = event.currentTarget as HTMLElement
     const cardRect = clickedCard.getBoundingClientRect()
     
-    // 计算悬浮窗位置：教室卡片右侧
-    const x = cardRect.right + 20 // 卡片右侧20px间距
-    const y = Math.max(20, cardRect.top) // 确保不超出顶部，至少留20px间距
+    // 计算悬浮窗位置：教室卡片右侧。
+    const x = cardRect.right + 20 // 卡片右侧 20px 间距
+    const y = Math.max(20, cardRect.top) // 顶部至少保留 20px 间距
     
     setModalPosition({ 
       x, 
@@ -41,7 +43,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
     setSelectedLab(null)
   }
 
-  // 获取节次时间表（与后端 time.utils.ts 和 LabScheduleModal 保持一致）
+  // 获取节次时间表（与后端 time.utils.ts 和 LabScheduleModal 保持一致）。
   const getPeriodRange = (date: Date) => {
     const y = date.getFullYear()
     const summerStart = new Date(y, 4, 1) // 5月1日
@@ -70,29 +72,29 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
     return [...am, ...pm]
   }
 
-  // 判断课程状态（与 LabScheduleModal 保持一致）
+  // 判断课程状态（与 LabScheduleModal 保持一致）。参数: spotlight 当前课程。
   const getSessionStatus = (spotlight: SpotlightCourse | null): 'ongoing' | 'upcoming' | 'completed' | null => {
     if (!spotlight || !spotlight.date || !spotlight.period) return null
     
     const now = currentTime
-    // 解析日期字符串为本地时区的日期（避免UTC时区问题）
+    // 解析日期字符串为本地时区的日期（避免 UTC 时区偏差）。
     const [year, month, day] = spotlight.date.split('-').map(Number)
     const sessionDate = new Date(year, month - 1, day) // 月份从0开始
     
-    // 比较日期（只比较年月日，忽略时间）
+    // 比较日期（仅年月日，忽略时间）。
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate())
     const dayDiff = sessionDay.getTime() - today.getTime()
     
-    // 如果日期是过去，返回completed
+    // 日期在过去，返回 completed。
     if (dayDiff < 0) {
       return 'completed'
     }
-    // 如果日期是未来，返回upcoming
+    // 日期在未来，返回 upcoming。
     if (dayDiff > 0) {
       return 'upcoming'
     }
-    // 如果日期是今天，继续判断时间
+    // 日期是今天，继续判断时间。
     
     const periods = getPeriodRange(now)
     const startPeriod = periods.find(p => p.p === spotlight.period)
@@ -103,7 +105,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
     const endPeriod = periods.find(p => p.p === endPeriodNum)
     const endTime = endPeriod?.end || startPeriod.end
     
-    // 解析时间
+    // 解析时间。
     const [startHour, startMin] = startPeriod.start.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
     const startTime = startHour * 60 + startMin
@@ -122,13 +124,13 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
   return (
     <div className="grid grid-rows-5 gap-2 sm:gap-3 h-full">
       {items.map((l) => {
-        // 从今天所有课程中选择第一个非 completed 的课程用于显示
-        // 优先级：进行中 > 即将开始 > 已完成（不显示）
+        // 从今日课程中选择第一个非 completed 的课程用于卡片展示。
+        // 优先级：进行中 > 即将开始（已完成不展示）。
         let displayCourse: SpotlightCourse | null = null
         let status: 'ongoing' | 'upcoming' | 'completed' | null = null
         
         if (l.spotlight && Array.isArray(l.spotlight) && l.spotlight.length > 0) {
-          // 遍历所有课程，找到第一个非 completed 的课程
+          // 遍历课程，找到第一个非 completed 的课程。
           for (const course of l.spotlight) {
             const courseStatus = getSessionStatus(course)
             if (courseStatus !== 'completed') {
@@ -139,12 +141,11 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
           }
         }
         
-        // 如果状态是已完成，在教室卡片中不显示课程信息（视为无课）
-        // 但在课表弹窗中仍然会显示所有课程（包括已完成的）
-        // displayCourse 不为 null 时，说明找到了非 completed 的课程
+        // 卡片不展示已完成课程；悬浮窗仍显示完整课程。
+        // displayCourse 不为 null 表示找到了可展示课程。
         const shouldShowCourse = displayCourse !== null
         
-        // 根据状态确定颜色：进行中绿色、即将开始橙色、已完成灰色
+        // 根据状态确定边框样式：进行中绿色、即将开始橙色、无课默认。
         const getStatusColor = () => {
           if (!shouldShowCourse || !status) return 'border-white/10 hover:border-white/20'
           if (status === 'ongoing') {
@@ -184,7 +185,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
             {/* 课程进度条背景 */}
             {shouldShowCourse && displayCourse && status === 'ongoing' && <CourseProgressBar spotlight={displayCourse} status={status} />}
             
-            {/* 顶部 - 教室名称和状态Pill */}
+            {/* 顶部 - 教室名称与状态标签 */}
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <div className="font-bold text-xl sm:text-2xl text-white">{l.lab}</div>
               {shouldShowCourse ? (
@@ -200,10 +201,10 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
 
             {shouldShowCourse && displayCourse ? (
               <div className="flex items-start gap-4 sm:gap-6 flex-1">
-                {/* 左侧65% - 文字信息，自动换行 */}
+                {/* 左侧 65% - 文字信息 */}
                 <div className="min-w-0" style={{ width: '65%', maxWidth: '65%' }}>
                   <div className="space-y-1 sm:space-y-2">
-                    {/* 课程名称 - 限制1行 */}
+                    {/* 课程名称 - 限制 1 行 */}
                     <div className="text-base sm:text-lg font-bold opacity-95 leading-tight break-words line-clamp-1">
                       {displayCourse.course}
                     </div>
@@ -214,7 +215,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
                       </span>
                     </div>
                   </div>
-                  {/* 内容区域 - 限制3行 */}
+                  {/* 内容区域 - 限制 3 行 */}
                   {displayCourse.content && (
                     <div className="mt-3 text-xs sm:text-sm font-semibold opacity-75 leading-relaxed whitespace-normal break-words line-clamp-3">
                       {displayCourse.content}
@@ -222,7 +223,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
                   )}
                 </div>
 
-                {/* 右侧35% - 人数信息和环形图 */}
+                {/* 右侧 35% - 人数信息与环形图 */}
                 <div className="flex flex-col justify-center items-end gap-2" style={{ width: '35%' }}>
                   <div className="text-sm sm:text-base font-bold opacity-90 leading-relaxed w-20 text-center">
                     {displayCourse.planned}/{displayCourse.capacity}
@@ -259,7 +260,7 @@ export default function LabSpotlight({ items }: { items: SpotlightItem[] }) {
   )
 }
 
-// 环形图组件
+// 环形图组件。参数: planned 计划人数, capacity 容量, full 是否满员。
 function AttendanceRingChart({ planned, capacity, full }: { planned: number; capacity: number; full: boolean }) {
   const percentage = Math.round((planned / capacity) * 100)
   const radius = 35
@@ -268,7 +269,7 @@ function AttendanceRingChart({ planned, capacity, full }: { planned: number; cap
   const strokeDasharray = circumference
   const strokeDashoffset = circumference - (percentage / 100) * circumference
   
-  // 根据使用率确定颜色
+  // 根据使用率确定颜色。
   const getStrokeColor = () => {
     if (percentage > 100) return "#ef4444" // 红色 - 超员
     if (percentage >= 80) return "#f59e0b" // 黄色 - 接近满员
@@ -311,7 +312,7 @@ function AttendanceRingChart({ planned, capacity, full }: { planned: number; cap
   )
 }
 
-// 课程进度条组件
+// 课程进度条组件。参数: spotlight 当前课程, status 当前状态。
 function CourseProgressBar({ spotlight, status }: { spotlight: any; status: 'ongoing' | 'upcoming' | 'completed' | null }) {
   const [progress, setProgress] = React.useState(0)
   
@@ -321,7 +322,7 @@ function CourseProgressBar({ spotlight, status }: { spotlight: any; status: 'ong
       return
     }
     
-    // 解析时间
+    // 解析时间。
     const [startTime, endTime] = spotlight.time.split('-')
     const [startHour, startMin] = startTime.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
@@ -343,7 +344,7 @@ function CourseProgressBar({ spotlight, status }: { spotlight: any; status: 'ong
       setProgress((elapsed / totalDuration) * 100)
     }
     
-    // 每分钟更新一次
+    // 每分钟更新一次。
     const interval = setInterval(() => {
       const now = new Date()
       const elapsed = now.getTime() - start.getTime()

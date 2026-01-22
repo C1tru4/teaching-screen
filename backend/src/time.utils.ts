@@ -1,4 +1,5 @@
-// 自包含类型（不再依赖 ./types）
+// 功能：时间与节次相关的工具函数。
+// 自包含类型（不再依赖 ./types）。
 export type PeriodIndex = 1|2|3|4|5|6|7|8;
 export interface PeriodTime { p: PeriodIndex; start: string; end: string; }
 
@@ -60,7 +61,7 @@ export function weekRange(date: Date): { monday: Date; sunday: Date } {
   return { monday, sunday };
 }
 
-/** 学期周号（从1开始；先对齐到周一再算） */
+/** 学期周号（从 1 开始；先对齐到周一再算） */
 export function weekNoOf(date: Date, semesterStartMonday: Date): number {
   const ms = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   const diff = ms(date) - ms(semesterStartMonday);

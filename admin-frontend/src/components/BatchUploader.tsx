@@ -1,3 +1,4 @@
+// 功能：通用批量导入组件（Excel/CSV 预览、校验与提交）。
 import React, { useMemo, useState } from 'react'
 import { Upload, Button, Modal, Table, message, Progress, Space, Typography } from 'antd'
 import { UploadOutlined, FileExcelOutlined, FileTextOutlined, EyeOutlined } from '@ant-design/icons'
@@ -37,10 +38,10 @@ export default function BatchUploader({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [errors, setErrors] = useState<Array<{ index: number; field?: string; message: string }>>([])
 
-  // 统一表头映射：将常见别名合并为标准中文键名，便于后续处理
+  // 表头别名映射：将常见字段统一为标准中文键名。
   const headerAliasMap = useMemo(() => {
     const map: Record<string, string> = {
-      // 课表相关
+      // 课表字段
       '日期': '日期', 'date': '日期', '时间': '日期', '上课日期': '日期', '日期*': '日期',
       '节次': '节次', 'period': '节次', '节': '节次', '第几节': '节次', '节次*': '节次',
       '课程': '课程', 'course': '课程', '课程名称': '课程', '科目': '课程', '课程*': '课程',
@@ -48,15 +49,15 @@ export default function BatchUploader({
       '内容': '内容', 'content': '内容', '实验内容': '内容',
       '上课班级': '上课班级', 'classNames': '上课班级', '班级列表': '上课班级', '上课班级*': '上课班级', 'classes': '上课班级', '班级信息': '上课班级', '参与班级': '上课班级',
       '报课人数': '报课人数', 'planned': '报课人数', '报名人数': '报课人数', '计划人数': '报课人数',
-      // 班级管理相关（用于班级管理页面的批量上传）
+      // 班级字段（用于班级管理批量上传）
       '专业': '专业', 'major': '专业', '专业名称': '专业', '专业*': '专业', '专业名': '专业', 'major_name': '专业', '专业类别': '专业',
       '人数': '人数', 'student_count': '人数', '学生人数': '人数', '班级人数': '人数', '人数*': '人数', '学生数': '人数', '班级学生数': '人数', 'count': '人数', '学生数量': '人数',
       '班级名称': '班级名称', '班级名称*': '班级名称', 'name': '班级名称', '班级*': '班级名称', 'class_name': '班级名称', '班级名': '班级名称',
-      // 注意：'班级'和'class'在课表中表示'上课班级'，在班级管理中表示'班级名称'，根据dataKey区分
+      // '班级'/'class' 在不同场景含义不同，通过 dataKey 区分。
       '课时': '课时', 'duration': '课时', '课时数': '课时', '持续课时': '课时',
       '教室': '教室', '实验室': '教室', 'lab': '教室', 'labid': 'labId', '实验室id': 'labId', '教室id': 'labId',
       
-      // 项目相关
+      // 项目字段
       '项目标题': '项目标题', 'title': '项目标题', '项目名称': '项目标题', '标题': '项目标题', '项目*': '项目标题', '项目标题*': '项目标题',
       '导师': '导师', 'mentor': '导师', '指导教师': '导师', '导师*': '导师',
       '状态': '状态', 'status': '状态', '项目状态': '状态', '状态*': '状态',
@@ -65,7 +66,7 @@ export default function BatchUploader({
       '简介': '简介', 'description': '简介', '项目简介': '简介', '描述': '简介', '项目描述': '简介',
       '团队成员': '团队成员', 'team_members': '团队成员', '成员': '团队成员', '队员': '团队成员', '团队成员*': '团队成员'
     }
-    // 统一小写去空格键，加速查询
+    // 统一 key 为小写且去空格，便于快速查找。
     const normalized: Record<string, string> = {}
     for (const k of Object.keys(map)) {
       const normalizedKey = k.trim().toLowerCase()
@@ -74,12 +75,13 @@ export default function BatchUploader({
     return normalized
   }, [])
 
+  // 归一化表头名称。参数: header 原始表头值。
   function normalizeHeader(header: any): string | undefined {
     if (!header) return undefined
     const key = String(header).trim().toLowerCase()
-    // 先尝试直接查找
+    // 先尝试完整 key 匹配。
     let result = headerAliasMap[key]
-    // 如果找不到，尝试去除星号后再查找
+    // 若带 * 且未匹配，去掉 * 再尝试。
     if (!result && key.endsWith('*')) {
       const keyWithoutStar = key.slice(0, -1)
       result = headerAliasMap[keyWithoutStar]
@@ -87,6 +89,7 @@ export default function BatchUploader({
     return result
   }
 
+  // 宽松布尔值解析。参数: v 任意输入值。
   function toBooleanLoose(v: any): boolean {
     if (v === true) return true
     if (v === false) return false
@@ -96,18 +99,20 @@ export default function BatchUploader({
     const falsy = new Set(['否','n','no','0','false','不可','不允许'])
     if (truthy.has(s)) return true
     if (falsy.has(s)) return false
-    // 非空默认 true（更贴近“勾选”语义）
+    // 非空默认 true（贴近“勾选”语义）。
     return true
   }
 
+  // 转为整数。参数: v 输入值, fallback 默认值。
   function toInt(v: any, fallback = 0): number {
     const n = Number(v)
     return Number.isFinite(n) ? Math.floor(n) : fallback
   }
 
+  // 解析日期为 YYYY-MM-DD。参数: input 日期输入。
   function normalizeDate(input: any): string | undefined {
     if (!input && input !== 0) return undefined
-    // 如果是 Excel 日期序列号
+    // Excel 日期序列号处理。
     if (typeof input === 'number') {
       const d = XLSX.SSF.parse_date_code(input)
       if (d) {
@@ -117,9 +122,9 @@ export default function BatchUploader({
         return `${y}-${m}-${day}`
       }
     }
-    // 各类分隔符归一化
+    // 统一分隔符格式。
     const s = String(input).trim().replace(/[./]/g, '-').replace(/年|月/g, '-').replace(/日/g, '')
-    // 尝试 yyyy-mm-dd 或 yyyy-m-d
+    // 解析 yyyy-mm-dd 或 yyyy-m-d。
     const m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
     if (m) {
       const y = m[1]
@@ -130,10 +135,11 @@ export default function BatchUploader({
     return undefined
   }
 
+  // 处理文件选择变化。参数: info Upload 事件信息。
   const handleFileChange = (info: any) => {
-    setFileList(info.fileList.slice(-1)) // 只保留最后一个文件
+    setFileList(info.fileList.slice(-1)) // 仅保留最新文件
     
-    // 如果文件列表为空，清空预览数据
+    // 文件被清空时重置状态。
     if (info.fileList.length === 0) {
       setPreviewData([])
       setPreviewVisible(false)
@@ -141,8 +147,7 @@ export default function BatchUploader({
       return
     }
     
-    // 由于设置了 beforeUpload: () => false，文件不会自动上传
-    // 所以直接处理文件，不检查 status
+    // beforeUpload 已阻止自动上传，直接解析文件内容。
     if (info.fileList.length > 0) {
       const file = info.file.originFileObj || info.file
       if (file) {
@@ -155,18 +160,19 @@ export default function BatchUploader({
     }
   }
 
+  // 读取 CSV 文件并生成预览数据。参数: file 选择的文件。
   const readCsvFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
         let text = e.target?.result as string
         
-        // 处理BOM（Byte Order Mark）
+        // 去除 BOM。
         if (text.charCodeAt(0) === 0xFEFF) {
           text = text.slice(1)
         }
         
-        // 处理不同的换行符
+        // 统一换行符并去除空行。
         const lines = text.split(/\r?\n/).filter(line => line.trim())
         
         if (lines.length < 2) {
@@ -174,7 +180,7 @@ export default function BatchUploader({
           return
         }
 
-        // 解析CSV行，处理引号和逗号
+        // 解析 CSV 行（处理引号与逗号）。
         const parseCsvLine = (line: string): string[] => {
           const result: string[] = []
           let current = ''
@@ -183,7 +189,7 @@ export default function BatchUploader({
           for (let i = 0; i < line.length; i++) {
             const char = line[i]
             if (char === '"') {
-              // 处理转义的引号
+              // 处理转义的引号。
               if (i + 1 < line.length && line[i + 1] === '"') {
                 current += '"'
                 i++ // 跳过下一个引号
@@ -210,14 +216,14 @@ export default function BatchUploader({
           console.log('CSV第一行数据:', rows[0])
         }
         
-        // 检查表头识别情况
+        // 调试输出：表头识别情况。
         console.log('=== 表头识别测试 ===')
         headers.forEach((header, index) => {
           const normalized = normalizeHeader(header)
           console.log(`表头${index}: "${header}" -> "${normalized}"`)
         })
         
-        // 检查headerAliasMap内容
+        // 调试输出：headerAliasMap 关键字段。
         console.log('=== headerAliasMap内容 ===')
         console.log('项目标题相关映射:', {
           '项目标题': headerAliasMap['项目标题'],
@@ -226,7 +232,7 @@ export default function BatchUploader({
           '标题': headerAliasMap['标题']
         })
         
-        // 检查表头处理过程
+        // 调试输出：表头处理过程。
         console.log('=== 表头处理过程 ===')
         headers.forEach((header, index) => {
           const trimmed = String(header).trim()
@@ -235,13 +241,13 @@ export default function BatchUploader({
           console.log(`表头${index}: 原始="${header}" -> 去空格="${trimmed}" -> 小写="${lowercased}" -> 映射="${mapped}"`)
         })
         
-        // 检查表头是否为空或无效
+        // 表头为空或无效时直接报错。
         if (headers.length === 0 || headers.every(h => !h)) {
           message.error('CSV文件表头为空或无效')
           return
         }
         
-        // 检查是否有数据行
+        // 没有数据行时直接报错。
         if (rows.length === 0) {
           message.error('CSV文件没有数据行')
           return
@@ -258,23 +264,23 @@ export default function BatchUploader({
           })
 
 
-          // 1) 归一化到标准中文键
+          // 1) 归一化为标准中文键名。
           const normalized: Record<string, any> = {}
           for (const key of Object.keys(raw)) {
             const std = normalizeHeader(key)
             if (std) {
               normalized[std] = raw[key]
             } else {
-              // 如果字段名没有被识别，尝试直接使用原始字段名
+              // 未识别字段保留原始键名。
               normalized[key] = raw[key]
             }
           }
           
-          // 根据dataKey决定字段映射逻辑
+          // 2) 根据 dataKey 选择字段映射规则。
           const result: Record<string, any> = {}
           
           if (dataKey === 'timetable') {
-            // 课表字段映射
+            // 课表字段映射。
             result['日期'] = raw['日期'] || raw['date'] || raw['时间'] || raw['上课日期'] || normalized['日期']
             result['节次'] = raw['节次'] || raw['period'] || raw['节'] || raw['第几节'] || normalized['节次']
             result['课程'] = raw['课程'] || raw['course'] || raw['课程名称'] || raw['科目'] || normalized['课程']
@@ -283,18 +289,18 @@ export default function BatchUploader({
             result['上课班级'] = raw['上课班级'] || raw['classNames'] || raw['班级'] || raw['班级名称'] || raw['班级列表'] || raw['班级*'] || raw['上课班级*'] || raw['class'] || raw['classes'] || raw['班级信息'] || raw['参与班级'] || normalized['上课班级']
             result['报课人数'] = raw['报课人数'] || raw['planned'] || raw['报名人数'] || raw['计划人数'] || normalized['报课人数']
             result['课时'] = raw['课时'] || raw['duration'] || raw['课时数'] || raw['持续课时'] || normalized['课时'] || 2
-            // 尝试多种可能的教室字段名
+            // 教室字段可能包含名称或 ID。
             result['教室'] = raw['教室'] || raw['实验室'] || raw['lab'] || raw['教室*'] || 
                             raw['教室(可填labId或名称)'] || raw['教室名称'] || raw['实验室名称'] || 
                             raw['classroom'] || raw['room'] || normalized['教室']
             result['labId'] = raw['labId'] || raw['实验室id'] || raw['教室id'] || normalized['labId']
           } else if (dataKey === 'classes') {
-            // 班级字段映射
+            // 班级字段映射。
             result['班级名称'] = normalized['班级名称'] || raw['班级名称'] || raw['班级'] || raw['name'] || normalized['班级名称']
             result['专业'] = normalized['专业'] || raw['专业'] || raw['专业名称'] || raw['major'] || normalized['专业']
             result['人数'] = normalized['人数'] || raw['人数'] || raw['班级人数'] || raw['学生人数'] || raw['student_count'] || normalized['人数']
           } else if (dataKey === 'projects') {
-            // 项目字段映射 - 同时设置中文字段名和英文字段名
+            // 项目字段映射（保留中文预览与英文提交字段）。
             const title = normalized['项目标题'] || raw['项目标题'] || raw['title'] || raw['项目名称'] || raw['标题']
             const mentor = normalized['导师'] || raw['导师'] || raw['mentor'] || raw['指导教师']
             const status = normalized['状态'] || raw['状态'] || raw['status'] || raw['项目状态']
@@ -303,7 +309,7 @@ export default function BatchUploader({
             const description = normalized['简介'] || raw['简介'] || raw['description'] || raw['项目简介'] || raw['描述'] || raw['项目描述']
             const teamMembers = normalized['团队成员'] || raw['团队成员'] || raw['team_members'] || raw['成员'] || raw['队员']
             
-            // 自动计算人数
+            // 自动计算人数。
             let memberCount = 1 // 默认值
             if (teamMembers) {
               if (typeof teamMembers === 'string') {
@@ -314,7 +320,7 @@ export default function BatchUploader({
               }
             }
             
-            // 设置中文字段名（用于预览显示）
+            // 中文字段用于预览展示。
             result['项目标题'] = title
             result['导师'] = mentor
             result['人数'] = memberCount
@@ -324,7 +330,7 @@ export default function BatchUploader({
             result['简介'] = description
             result['团队成员'] = teamMembers
             
-            // 同时设置英文字段名（用于API调用）
+            // 英文字段用于 API 提交。
             result['title'] = title
             result['mentor'] = mentor
             result['member_count'] = memberCount
@@ -336,9 +342,9 @@ export default function BatchUploader({
           }
           
 
-          // 2) 值的容错与归一化
+          // 3) 值的容错与归一化。
           if (dataKey === 'timetable') {
-            // 课表字段处理
+            // 课表字段处理。
             if (result['日期']) {
               const d = normalizeDate(result['日期'])
               if (d) result['日期'] = d
@@ -346,12 +352,12 @@ export default function BatchUploader({
             if (result['节次']) result['节次'] = toInt(result['节次'], NaN)
             if (result['报课人数']) result['报课人数'] = toInt(result['报课人数'], 0)
           } else if (dataKey === 'projects') {
-            // 项目字段处理
+            // 项目字段处理。
             if (result['人数']) result['人数'] = toInt(result['人数'], 1)
             if (result['年份']) result['年份'] = toInt(result['年份'], new Date().getFullYear())
             if (result['优秀']) result['优秀'] = toBooleanLoose(result['优秀'])
             if (result['状态']) {
-              // 状态值标准化
+              // 状态值标准化。
               const status = String(result['状态']).toLowerCase()
               if (status.includes('审核') || status.includes('review')) result['状态'] = 'reviewing'
               else if (status.includes('进行') || status.includes('ongoing')) result['状态'] = 'ongoing'
@@ -360,9 +366,9 @@ export default function BatchUploader({
             }
           }
           
-          // 3) 映射为英文字段名（用于API调用）
+          // 4) 补齐英文字段名（用于 API 提交）。
           if (dataKey === 'timetable') {
-            // 课表英文字段映射
+            // 课表英文字段映射。
             if (result['日期']) result['date'] = result['日期']
             if (result['节次']) result['period'] = result['节次']
             if (result['课程']) result['course'] = result['课程']
@@ -373,7 +379,7 @@ export default function BatchUploader({
             if (result['教室']) result['lab'] = result['教室']
             if (result['labId']) result['labId'] = result['labId']
           } else if (dataKey === 'projects') {
-            // 项目英文字段映射
+            // 项目英文字段映射。
             if (result['项目标题']) result['title'] = result['项目标题']
             if (result['导师']) result['mentor'] = result['导师']
             if (result['人数']) result['member_count'] = result['人数']
@@ -384,7 +390,7 @@ export default function BatchUploader({
             if (result['团队成员']) result['team_members'] = result['团队成员']
           }
 
-          // 附加源行号，便于错误定位
+          // 附加源行号，便于错误定位。
           result._rowIndex = index + 2 // CSV行号（从2开始，因为跳过了表头）
           
           console.log(`CSV第${index + 1}行最终结果:`, result)
@@ -392,7 +398,7 @@ export default function BatchUploader({
           
           return result
         }).filter(item => {
-          // 临时放宽过滤条件，只检查是否有_rowIndex（表示是有效行）
+          // 仅保留有效行（有行号即视为有效）。
           const hasData = item._rowIndex !== undefined
           console.log(`CSV第${item._rowIndex}行数据检查:`, { hasData, item })
           if (!hasData) {
@@ -429,6 +435,7 @@ export default function BatchUploader({
     reader.readAsText(file, 'UTF-8')
   }
 
+  // 读取 Excel 文件并生成预览数据。参数: file 选择的文件。
   const readExcelFile = (file: File) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -439,7 +446,7 @@ export default function BatchUploader({
         const worksheet = workbook.Sheets[sheetName]
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
         
-        // 跳过表头，从第二行开始
+        // 跳过表头，从第二行开始解析。
         const headers = (jsonData[0] as string[]).map(h => (h ?? '').toString().trim())
         const rows = jsonData.slice(1) as any[][]
 
@@ -452,36 +459,36 @@ export default function BatchUploader({
             }
           })
 
-           // 1) 归一化到标准中文键
+           // 1) 归一化为标准中文键名。
            const normalized: Record<string, any> = {}
            for (const key of Object.keys(raw)) {
              const std = normalizeHeader(key)
              if (std) {
                normalized[std] = raw[key]
              } else {
-               // 如果字段名没有被识别，尝试直接使用原始字段名
+               // 未识别字段保留原始键名。
                normalized[key] = raw[key]
              }
            }
            
-           // 根据dataKey决定字段映射逻辑
+           // 2) 根据 dataKey 选择字段映射规则。
            const result: Record<string, any> = {}
            
            if (dataKey === 'timetable') {
-             // 课表字段映射
+             // 课表字段映射。
              result['日期'] = raw['日期'] || raw['date'] || raw['时间'] || raw['上课日期'] || normalized['日期']
              result['节次'] = raw['节次'] || raw['period'] || raw['节'] || raw['第几节'] || normalized['节次']
              result['课程'] = raw['课程'] || raw['course'] || raw['课程名称'] || raw['科目'] || normalized['课程']
              result['教师'] = raw['教师'] || raw['teacher'] || raw['讲师'] || normalized['教师']
              result['内容'] = raw['内容'] || raw['content'] || raw['实验内容'] || normalized['内容']
              result['报课人数'] = raw['报课人数'] || raw['planned'] || raw['报名人数'] || raw['计划人数'] || normalized['报课人数']
-             // 尝试多种可能的教室字段名
+             // 教室字段可能包含名称或 ID。
              result['教室'] = raw['教室'] || raw['实验室'] || raw['lab'] || raw['教室*'] || 
                              raw['教室(可填labId或名称)'] || raw['教室名称'] || raw['实验室名称'] || 
                              raw['classroom'] || raw['room'] || normalized['教室']
              result['labId'] = raw['labId'] || raw['实验室id'] || raw['教室id'] || normalized['labId']
            } else if (dataKey === 'projects') {
-             // 项目字段映射 - 同时设置中文字段名和英文字段名
+             // 项目字段映射（保留中文预览与英文提交字段）。
              const title = normalized['项目标题'] || raw['项目标题'] || raw['title'] || raw['项目名称'] || raw['标题']
             const mentor = normalized['导师'] || raw['导师'] || raw['mentor'] || raw['指导教师']
             const status = normalized['状态'] || raw['状态'] || raw['status'] || raw['项目状态']
@@ -490,7 +497,7 @@ export default function BatchUploader({
             const description = normalized['简介'] || raw['简介'] || raw['description'] || raw['项目简介'] || raw['描述'] || raw['项目描述']
             const teamMembers = normalized['团队成员'] || raw['团队成员'] || raw['team_members'] || raw['成员'] || raw['队员']
             
-            // 自动计算人数
+            // 自动计算人数。
             let memberCount = 1 // 默认值
             if (teamMembers) {
               if (typeof teamMembers === 'string') {
@@ -501,7 +508,7 @@ export default function BatchUploader({
               }
             }
             
-            // 设置中文字段名（用于预览显示）
+            // 中文字段用于预览展示。
             result['项目标题'] = title
             result['导师'] = mentor
             result['人数'] = memberCount
@@ -511,7 +518,7 @@ export default function BatchUploader({
             result['简介'] = description
             result['团队成员'] = teamMembers
             
-            // 同时设置英文字段名（用于API调用）
+            // 英文字段用于 API 提交。
             result['title'] = title
             result['mentor'] = mentor
             result['member_count'] = memberCount
@@ -522,9 +529,9 @@ export default function BatchUploader({
              result['team_members'] = teamMembers
            }
 
-          // 2) 值的容错与归一化
+          // 3) 值的容错与归一化。
           if (dataKey === 'timetable') {
-            // 课表字段处理
+            // 课表字段处理。
             if (result['日期']) {
               const d = normalizeDate(result['日期'])
               if (d) result['日期'] = d
@@ -532,12 +539,12 @@ export default function BatchUploader({
             if (result['节次']) result['节次'] = toInt(result['节次'], NaN)
             if (result['报课人数']) result['报课人数'] = toInt(result['报课人数'], 0)
           } else if (dataKey === 'projects') {
-            // 项目字段处理
+            // 项目字段处理。
             if (result['人数']) result['人数'] = toInt(result['人数'], 1)
             if (result['年份']) result['年份'] = toInt(result['年份'], new Date().getFullYear())
             if (result['优秀']) result['优秀'] = toBooleanLoose(result['优秀'])
             if (result['状态']) {
-              // 状态值标准化
+              // 状态值标准化。
               const status = String(result['状态']).toLowerCase()
               if (status.includes('审核') || status.includes('review')) result['状态'] = 'reviewing'
               else if (status.includes('进行') || status.includes('ongoing')) result['状态'] = 'ongoing'
@@ -546,9 +553,9 @@ export default function BatchUploader({
             }
           }
           
-          // 3) 映射为英文字段名（用于API调用）
+          // 4) 补齐英文字段名（用于 API 提交）。
           if (dataKey === 'timetable') {
-            // 课表英文字段映射
+            // 课表英文字段映射。
             if (result['日期']) result['date'] = result['日期']
             if (result['节次']) result['period'] = result['节次']
             if (result['课程']) result['course'] = result['课程']
@@ -559,7 +566,7 @@ export default function BatchUploader({
             if (result['教室']) result['lab'] = result['教室']
             if (result['labId']) result['labId'] = result['labId']
           } else if (dataKey === 'projects') {
-            // 项目英文字段映射
+            // 项目英文字段映射。
             if (result['项目标题']) result['title'] = result['项目标题']
             if (result['导师']) result['mentor'] = result['导师']
             if (result['人数']) result['member_count'] = result['人数']
@@ -570,11 +577,11 @@ export default function BatchUploader({
             if (result['团队成员']) result['team_members'] = result['团队成员']
           }
 
-          // 附加源行号，便于错误定位
+          // 附加源行号，便于错误定位。
           result._rowIndex = index + 2 // Excel行号（从2开始，因为跳过了表头）
           return result
         }).filter(item => {
-          // 临时放宽过滤条件，只检查是否有_rowIndex（表示是有效行）
+          // 仅保留有效行（有行号即视为有效）。
           const hasData = item._rowIndex !== undefined
           console.log(`Excel第${item._rowIndex}行数据检查:`, { hasData, item })
           if (!hasData) {
@@ -611,6 +618,7 @@ export default function BatchUploader({
     reader.readAsArrayBuffer(file)
   }
 
+  // 上传预览数据。参数: 无。
   const handleUpload = async () => {
     if (previewData.length === 0) {
       message.warning('没有可上传的数据')
@@ -621,7 +629,7 @@ export default function BatchUploader({
     setUploadProgress(0)
 
     try {
-      // 预检（可选）
+      // 预检（可选）。
       if (validate) {
         const r = await validate(previewData)
         const errs = r?.errors || []
@@ -634,7 +642,7 @@ export default function BatchUploader({
         }
       }
 
-      // 模拟进度
+      // 展示上传进度（模拟）。
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => {
           if (prev >= 90) {
@@ -645,19 +653,17 @@ export default function BatchUploader({
         })
       }, 100)
 
-       // 转换数据格式，确保使用英文字段名进行API调用
+       // 转换数据格式，确保使用英文字段名进行 API 调用。
        let uploadData: any[]
        
        if (dataKey === 'timetable') {
-         // 课表数据转换
-         console.log('上传前的预览数据:', previewData.slice(0, 2)) // 打印前2条数据用于调试
+         // 课表数据转换。
+         console.log('上传前的预览数据:', previewData.slice(0, 2))
          uploadData = previewData.map(item => {
            const classNames = item.classNames || item['上课班级'] || undefined
            const plannedInput = item.planned ?? item['报课人数']
            
-           // 如果同时填写了报课人数和班级，优先使用输入的报课人数
-           // 如果只填写了班级，planned 为 undefined（后端会自动计算）
-           // 如果只填写了报课人数，planned 使用输入值
+           // planned 规则：有人数字段优先；只有班级时交给后端计算。
            return {
            date: item.date || item['日期'],
            period: item.period || item['节次'],
@@ -675,16 +681,16 @@ export default function BatchUploader({
            实验室: item['实验室'] || item['教室']
            }
          })
-         console.log('转换后的上传数据:', uploadData.slice(0, 2)) // 打印前2条数据用于调试
+         console.log('转换后的上传数据:', uploadData.slice(0, 2))
        } else if (dataKey === 'classes') {
-         // 班级数据转换和验证
+         // 班级数据转换与校验。
          const errors: Array<{ index: number; field?: string; message: string }> = []
          uploadData = previewData.map((item, index) => {
            const name = item.name || item['班级名称'] || item['班级'] || item['name']
            const major = item.major || item['专业'] || item['专业名称'] || item['major']
            const studentCount = item.student_count || item['人数'] || item['班级人数'] || item['学生人数'] || item['student_count']
            
-           // 验证必填字段
+           // 必填校验。
            if (!name || !name.trim()) {
              errors.push({ index: index + 1, field: '班级名称', message: '班级名称不能为空' })
            }
@@ -702,7 +708,7 @@ export default function BatchUploader({
            }
          })
          
-         // 如果有验证错误，显示错误信息
+         // 校验失败则直接返回。
          if (errors.length > 0) {
            setErrors(errors)
            message.error(`数据验证失败：${errors.length} 条记录有问题，请修正后再试`)
@@ -711,7 +717,7 @@ export default function BatchUploader({
            return
          }
        } else if (dataKey === 'projects') {
-         // 项目数据转换
+         // 项目数据转换。
          uploadData = previewData.map(item => ({
            title: item.title || item['项目标题'],
            mentor: item.mentor || item['导师'],
@@ -723,7 +729,7 @@ export default function BatchUploader({
            team_members: item.team_members || item['团队成员']
          }))
        } else {
-         // 默认使用原始数据
+         // 默认使用原始数据。
          uploadData = previewData
        }
       
@@ -732,21 +738,21 @@ export default function BatchUploader({
       clearInterval(progressInterval)
       setUploadProgress(100)
       
-      // 基于实际结果显示成功反馈
+      // 基于结果显示反馈信息。
       if (result.failed > 0) {
         message.success(`上传完成：成功 ${result.success} 条，失败 ${result.failed} 条`)
       } else {
         message.success(`成功上传 ${result.success} 条数据`)
       }
       
-      // 调用上传完成回调
+      // 回调：上传完成通知。
       if (onUploadComplete) {
         onUploadComplete(result)
       }
       
-      // 上传成功后自动清理文件
+      // 上传成功后清理文件与预览状态。
       try {
-        // 清空文件列表，这会触发文件删除
+        // 清空文件列表，会触发 Upload 组件状态重置。
         console.log('开始清理上传的文件...')
         setFileList([])
         console.log('文件清理完成')
@@ -772,6 +778,7 @@ export default function BatchUploader({
     multiple: false
   }
 
+   // 下载 CSV 模板。参数: 无。
    const handleDownloadTemplate = async () => {
      if (templateUrl) {
        window.open(templateUrl, '_blank')
@@ -782,16 +789,16 @@ export default function BatchUploader({
      let sample: string[][]
      
      if (dataKey === 'timetable') {
-      // 课表模板
+      // 课表模板。
       headers = ['日期*','节次*','课程*','教师*','内容','上课班级','报课人数','课时','教室*']
        
-       // 获取现有教室列表
+       // 获取教室列表。
        let labs: Lab[] = []
        try {
          labs = await fetchLabs()
        } catch (error) {
          console.warn('获取教室列表失败，使用默认教室信息:', error)
-         // 使用默认教室信息作为备选
+         // 使用默认教室信息作为备选。
          labs = [
            { id: 1, name: '西116', capacity: 40 },
            { id: 2, name: '西108', capacity: 36 },
@@ -834,7 +841,7 @@ export default function BatchUploader({
          ['7. 如果没有填写上课班级，需要手动填写报课人数','','','','','','','',''],
        ]
      } else if (dataKey === 'projects') {
-       // 项目模板
+       // 项目模板。
        headers = ['项目标题*','导师*','状态','年份','优秀','简介','团队成员*']
        sample = [
          ['必填','必填','可选','可选','可选','可选','必填'],
@@ -864,7 +871,7 @@ export default function BatchUploader({
          ['（也支持英文：true, false）','','','','','','',''],
        ]
      } else if (dataKey === 'classes') {
-       // 班级模板
+       // 班级模板。
        headers = ['班级名称*','专业*','人数*']
        sample = [
          ['必填','必填','必填'],
@@ -886,17 +893,17 @@ export default function BatchUploader({
          ['4. 人数必须为正整数，不能为0或负数','',''],
        ]
      } else {
-       // 默认模板
+       // 默认模板。
        headers = ['字段1','字段2','字段3']
        sample = [['示例1','示例2','示例3']]
      }
      
-     // 生成CSV内容
+     // 生成 CSV 内容。
      const csvContent = [headers, ...sample]
        .map(row => row.map(cell => `"${cell}"`).join(','))
        .join('\n')
      
-     // 创建CSV文件下载
+     // 创建 CSV 文件并触发下载。
      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
      const url = URL.createObjectURL(blob)
      const a = document.createElement('a')

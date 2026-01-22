@@ -1,3 +1,4 @@
+// 功能：全局配置与数据维护页面（横幅、学期配置、大屏设置、清理数据）。
 import { useEffect, useState } from 'react'
 import { Button, DatePicker, Form, Input, InputNumber, Select, Space, Switch, Tag, Typography, message, Card, Divider, Modal, Dropdown } from 'antd'
 import { ExclamationCircleOutlined, DeleteOutlined, DownOutlined } from '@ant-design/icons'
@@ -50,11 +51,11 @@ export default function GlobalAdmin() {
         const list = await fetchLabs().catch(()=>[])
         setLabs(list)
 
-        // 加载项目年份
+        // 加载项目年份列表。
         const years = await fetchProjectYears().catch(()=>[])
         setProjectYears(years)
 
-        // 加载大屏显示配置
+        // 加载大屏显示配置。
         const mode = await fetchScreenDisplayMode().catch(() => ({ mode: 'adaptive' as ScreenDisplayMode }))
         setScreenMode(mode.mode)
         
@@ -62,7 +63,7 @@ export default function GlobalAdmin() {
         setScreenFixedConfig(fixedConfig)
         formScreenFixed.setFieldsValue(fixedConfig)
 
-        // 加载训练营标题配置
+        // 加载训练营标题配置。
         const titleConfig = await fetchProjectListTitle().catch(() => ({ title: '第1期训练营' }))
         setProjectListTitle(titleConfig.title)
         formProjectListTitle.setFieldsValue({ title: titleConfig.title })
@@ -73,11 +74,13 @@ export default function GlobalAdmin() {
     })()
   }, [])
 
+  // 保存横幅配置。参数: v 表单值。
   const saveBannerForm = async (v:any) => {
     const payload: BannerConfig = {
       content: v.content,
       level: v.level,
-      visible: true, // 始终为true，不再使用visible字段
+      // 固定为 true，保持旧字段兼容。
+      visible: true,
       scrollable: !!v.scrollable,
       scrollTime: v.scrollTime || 15,
       expiresAt: v.expiresAt ? v.expiresAt.toISOString() : null,
@@ -86,7 +89,7 @@ export default function GlobalAdmin() {
     setBanner(payload)
     message.success('横幅已保存')
     
-    // 自动刷新大屏
+    // 自动刷新大屏数据。
     try {
       await triggerScreenRefresh()
       message.success('大屏数据已更新')
@@ -95,6 +98,7 @@ export default function GlobalAdmin() {
     }
   }
 
+  // 取消横幅并重置表单。
   const cancelBanner = async () => {
     try {
       const payload: BannerConfig = {
@@ -116,7 +120,7 @@ export default function GlobalAdmin() {
       })
       message.success('横幅已取消')
       
-      // 自动刷新大屏
+      // 自动刷新大屏数据。
       try {
         await triggerScreenRefresh()
         message.success('大屏数据已更新')
@@ -129,16 +133,19 @@ export default function GlobalAdmin() {
     }
   }
 
+  // 保存夏令时区间。参数: v 表单值。
   const saveSeasonForm = async (v:any) => {
     await updateSeason({ summerStart: v.summerStart.toISOString(), summerEnd: v.summerEnd.toISOString() })
     message.success('夏令时段已保存')
   }
 
+  // 保存开学周一日期。参数: v 表单值。
   const saveSemesterForm = async (v:any) => {
     await updateSemesterStart({ date: v.start.format('YYYY-MM-DD') })
     message.success('开学日已保存')
   }
 
+  // 保存大屏显示模式。参数: mode 显示模式。
   const saveScreenMode = async (mode: ScreenDisplayMode) => {
     try {
       await updateScreenDisplayMode(mode)
@@ -157,6 +164,7 @@ export default function GlobalAdmin() {
     }
   }
 
+  // 保存固定模式配置。参数: v 表单值。
   const saveScreenFixedConfig = async (v: any) => {
     try {
       const config = { width: v.width, height: v.height, scale: v.scale }
@@ -176,7 +184,7 @@ export default function GlobalAdmin() {
     }
   }
 
-  // 确认删除函数
+  // 统一删除确认弹窗。参数: title 标题, content 提示文案, onConfirm 确认回调。
   const confirmDelete = (title: string, content: string, onConfirm: () => Promise<void>) => {
     Modal.confirm({
       title,
@@ -189,7 +197,7 @@ export default function GlobalAdmin() {
     })
   }
 
-  // 清空所有数据
+  // 清空全部业务数据（保留配置）。
   const handleClearAllData = () => {
     confirmDelete(
       '确认清空所有数据',
@@ -207,7 +215,7 @@ export default function GlobalAdmin() {
   }
 
 
-  // 删除课表数据
+  // 删除课表数据（可按教室）。
   const handleClearTimetable = (labId?: number) => {
     const labName = labId ? labs.find(l => l.id === labId)?.name : '所有教室'
     confirmDelete(
@@ -225,7 +233,7 @@ export default function GlobalAdmin() {
     )
   }
 
-  // 删除项目数据
+  // 删除项目数据（可按年份）。
   const handleClearProjects = (year?: number) => {
     const yearText = year ? `${year}年` : '所有年份'
     confirmDelete(
@@ -243,7 +251,7 @@ export default function GlobalAdmin() {
     )
   }
 
-  // 删除所有班级
+  // 删除所有班级。
   const handleClearAllClasses = () => {
     confirmDelete(
       '确认删除所有班级',
@@ -260,7 +268,7 @@ export default function GlobalAdmin() {
     )
   }
 
-  // 删除所有视频
+  // 删除所有项目视频文件。
   const handleClearAllVideos = () => {
     confirmDelete(
       '确认删除所有视频',
@@ -277,7 +285,7 @@ export default function GlobalAdmin() {
     )
   }
 
-  // 删除课表菜单项
+  // 课表删除菜单项。
   const timetableDeleteMenuItems: MenuProps['items'] = [
     ...labs.slice(0, 5).map(lab => ({
       key: `lab-${lab.id}`,
@@ -294,7 +302,7 @@ export default function GlobalAdmin() {
     }
   ]
 
-  // 删除项目菜单项
+  // 项目删除菜单项。
   const projectsDeleteMenuItems: MenuProps['items'] = [
     ...projectYears.map(year => ({
       key: `year-${year}`,
@@ -497,7 +505,7 @@ export default function GlobalAdmin() {
 
       <Divider />
 
-      {/* 数据管理 */}
+      {/* 数据管理区域 */}
       <div>
         <Title level={4}>数据管理</Title>
         <Card>

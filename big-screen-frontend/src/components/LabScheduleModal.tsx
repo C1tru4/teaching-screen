@@ -1,3 +1,4 @@
+// 功能：课表悬浮窗（按日期展示单个教室的课程列表）。
 import React, { useState, useEffect, useRef } from 'react'
 import { X, Calendar, Clock, User, BookOpen } from 'lucide-react'
 
@@ -32,7 +33,7 @@ export default function LabScheduleModal({
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
 
-  // 获取课表数据
+  // 获取课表数据。
   useEffect(() => {
     if (isOpen && labId) {
       fetchSchedule()
@@ -43,18 +44,18 @@ export default function LabScheduleModal({
     setLoading(true)
     try {
       const dateStr = selectedDate.toISOString().split('T')[0]
-      // 使用管理端的课表API
+      // 使用管理端的课表 API。
       const response = await fetch(`/api/labs/${labId}/timetable?date=${dateStr}`)
       const result = await response.json()
       
       if (result && result.days) {
-        // 找到指定日期的数据
+        // 找到指定日期的数据。
         const targetDay = result.days.find((day: any) => day.date === dateStr)
         if (targetDay) {
-          // 转换管理端数据格式为前端格式
+          // 转换管理端数据格式为前端格式。
           const scheduleData = targetDay.slots.map((slot: any) => {
             if (slot.session) {
-              // 计算实际时间范围（考虑多课时）
+              // 计算实际时间范围（考虑多课时）。
               const timeRange = calculateTimeRange(slot.session.period, slot.session.duration || 1, selectedDate)
               return {
                 id: slot.session.id,
@@ -65,17 +66,17 @@ export default function LabScheduleModal({
                 planned: slot.session.planned || 0,
                 status: getSessionStatus(slot.session, selectedDate),
                 content: slot.session.content || '',
-                period: slot.session.period // 保存period用于去重
+                period: slot.session.period // 保存 period 用于去重
               }
             }
             return null
           }).filter(Boolean)
           
-          // 创建完整的1-8节课表
+          // 生成去重后的课程列表。
           const fullSchedule = createFullSchedule(scheduleData)
           setSchedule(fullSchedule)
         } else {
-          // 没有找到指定日期的数据，显示空课表
+          // 没有找到指定日期的数据，显示空课表。
           const fullSchedule = createFullSchedule([])
           setSchedule(fullSchedule)
         }
@@ -93,7 +94,7 @@ export default function LabScheduleModal({
     }
   }
 
-  // 获取节次时间表（与后端 time.utils.ts 保持一致）
+  // 获取节次时间表（与后端 time.utils.ts 保持一致）。参数: date 日期。
   const getPeriodRange = (date: Date) => {
     const y = date.getFullYear()
     const summerStart = new Date(y, 4, 1) // 5月1日
@@ -122,7 +123,8 @@ export default function LabScheduleModal({
     return [...am, ...pm]
   }
 
-  // 计算课程的实际时间范围（考虑多课时）
+  // 计算课程的实际时间范围（考虑多课时）。
+  // 参数: period 起始节次, duration 持续节数, date 日期。
   const calculateTimeRange = (period: number, duration: number, date: Date) => {
     const periods = getPeriodRange(date)
     const startPeriod = periods.find(p => p.p === period)
@@ -134,27 +136,27 @@ export default function LabScheduleModal({
     return `${startPeriod.start}-${endPeriod?.end || startPeriod.end}`
   }
 
-  // 判断课程状态
+  // 判断课程状态。参数: session 课程数据, date 日期。
   const getSessionStatus = (session: any, date: Date) => {
     const now = new Date()
-    // 解析日期字符串为本地时区的日期（避免UTC时区问题）
+    // 解析日期字符串为本地时区的日期（避免 UTC 时区偏差）。
     const [year, month, day] = session.date.split('-').map(Number)
     const sessionDate = new Date(year, month - 1, day) // 月份从0开始
     
-    // 比较日期（只比较年月日，忽略时间）
+    // 比较日期（仅年月日，忽略时间）。
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
     const sessionDay = new Date(sessionDate.getFullYear(), sessionDate.getMonth(), sessionDate.getDate())
     const dayDiff = sessionDay.getTime() - today.getTime()
     
-    // 如果日期是过去，返回completed
+    // 日期在过去，返回 completed。
     if (dayDiff < 0) {
       return 'completed'
     }
-    // 如果日期是未来，返回upcoming
+    // 日期在未来，返回 upcoming。
     if (dayDiff > 0) {
       return 'upcoming'
     }
-    // 如果日期是今天，继续判断时间
+    // 日期是今天，继续判断时间。
     
     const periods = getPeriodRange(date)
     const startPeriod = periods.find(p => p.p === session.period)
@@ -165,7 +167,7 @@ export default function LabScheduleModal({
     const endPeriod = periods.find(p => p.p === endPeriodNum)
     const endTime = endPeriod?.end || startPeriod.end
     
-    // 解析时间
+    // 解析时间。
     const [startHour, startMin] = startPeriod.start.split(':').map(Number)
     const [endHour, endMin] = endTime.split(':').map(Number)
     const startTime = startHour * 60 + startMin
@@ -181,9 +183,10 @@ export default function LabScheduleModal({
     }
   }
 
-  // 创建课表，只显示有课程的时间段，并去重（只保留每个课程的第一节）
+  // 创建课表列表并去重（只保留每个课程的第一节）。
+  // 参数: scheduleData 原始课程列表。
   const createFullSchedule = (scheduleData: ScheduleItem[]) => {
-    // 去重：如果同一个课程跨越多节，只保留period最小的
+    // 去重：如果同一个课程跨越多节，只保留 period 最小的。
     const seen = new Map<number, ScheduleItem>()
     scheduleData.forEach(item => {
       const existing = seen.get(item.id)
@@ -195,7 +198,7 @@ export default function LabScheduleModal({
     return Array.from(seen.values())
   }
 
-  // 获取状态标签颜色（只用于标签，不用于卡片背景）
+  // 获取状态标签颜色（仅用于标签）。
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'ongoing':
@@ -222,6 +225,7 @@ export default function LabScheduleModal({
     }
   }
 
+  // 格式化日期为中文显示。参数: date 日期。
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -233,23 +237,23 @@ export default function LabScheduleModal({
 
   if (!isOpen) return null
 
-  // 定义固定高度常量
+  // 定义固定高度常量。
   const headerHeight = 80 // 头部高度（教室+日期）
   const footerHeight = 80 // 底部高度（共x节+时间切换）
   const courseHeight = 180 // 每节课的高度（增加高度以显示50个字的内容）
   
-  // 计算内容区域高度
+  // 计算内容区域高度。
   const calculateContentHeight = () => {
     if (schedule.length === 0) {
-      return 120 // 无课时显示"今日无课程安排"的高度
+      return 120 // 无课时显示“今日无课程安排”的高度
     } else if (schedule.length <= 2) {
-      // 1-2节课时：课程高度 + 内边距 + 间距 + 缓冲空间
+      // 1-2 节课：课程高度 + 内边距 + 间距 + 缓冲空间
       const coursePadding = 16 * 2 // 上下内边距 p-4 = 16px * 2
       const courseSpacing = 12 * (schedule.length - 1) // 课程间距 space-y-3 = 12px
       const bufferSpace = 20 // 额外的缓冲空间，防止重叠
       return (schedule.length * courseHeight) + coursePadding + courseSpacing + bufferSpace
     } else {
-      // 3节课以上时：显示2节课 + 内边距 + 间距 + 缓冲空间
+      // 3 节课以上：显示 2 节课 + 内边距 + 间距 + 缓冲空间
       const coursePadding = 16 * 2 // 上下内边距 p-4 = 16px * 2
       const courseSpacing = 12 * 1 // 2节课之间的间距
       const bufferSpace = 20 // 额外的缓冲空间，防止重叠
@@ -257,27 +261,27 @@ export default function LabScheduleModal({
     }
   }
   
-  // 计算悬浮窗总高度
+  // 计算悬浮窗总高度。
   const calculateModalHeight = () => {
     const contentHeight = calculateContentHeight()
     const totalHeight = headerHeight + footerHeight + contentHeight
     return Math.min(totalHeight, window.innerHeight - 40) // 确保不超出屏幕
   }
 
-  // 计算悬浮窗位置，如果向下会超出则向上调整
+  // 计算悬浮窗位置，避免超出屏幕。
   const calculateModalPosition = () => {
     const modalHeight = calculateModalHeight()
     let y = position.y
     
-    // 如果向下会超出屏幕底部，则向上调整
+    // 如果向下会超出屏幕底部，则向上调整。
     if (y + modalHeight > window.innerHeight - 20) {
       y = Math.max(20, window.innerHeight - modalHeight - 20)
     }
     
-    // 确保悬浮窗不会超出屏幕顶部
+    // 确保悬浮窗不会超出屏幕顶部。
     y = Math.max(20, y)
     
-    // 确保悬浮窗不会超出屏幕底部
+    // 确保悬浮窗不会超出屏幕底部。
     const maxY = window.innerHeight - modalHeight - 20
     if (y > maxY) {
       y = maxY
@@ -355,7 +359,7 @@ export default function LabScheduleModal({
                     key={item.id}
                     className="p-5 rounded-xl border border-white/10 bg-slate-800/50 transition-all duration-300 hover:scale-[1.02] hover:border-white/20"
                   >
-                    {/* 第一行：时间 + 课程情况 */}
+                    {/* 第一行：时间 + 课程状态 */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-slate-400" />
@@ -366,7 +370,7 @@ export default function LabScheduleModal({
                       </span>
                     </div>
                     
-                    {/* 第二行：课程名称 + 老师名称（如果课程信息过长，老师名称会另起一行） */}
+                    {/* 第二行：课程名称 + 老师名称 */}
                     <div className="mb-3">
                       <div className="flex items-center gap-2 mb-2">
                         <BookOpen className="w-4 h-4 flex-shrink-0 text-slate-400" />
@@ -378,7 +382,7 @@ export default function LabScheduleModal({
                       </div>
                     </div>
                     
-                    {/* 第三行：课程信息（确保能显示50个字） */}
+                    {/* 第三行：课程内容 */}
                     {item.content && (
                       <div className="text-sm font-medium leading-relaxed whitespace-normal break-words text-slate-300 min-h-[60px]">
                         {item.content}

@@ -1,6 +1,7 @@
+// 功能：通用数字与淡入动画组件。
 import React, { useEffect, useState } from 'react';
 
-// 数字滚动动画组件
+// 数字滚动动画组件。参数: value 目标值, duration 动画时长等。
 export function AnimatedNumber({ 
   value, 
   duration = 1000, 
@@ -31,7 +32,7 @@ export function AnimatedNumber({
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // 使用缓动函数
+        // 使用缓动函数。
         const easeOutCubic = 1 - Math.pow(1 - progress, 3);
         const currentValue = startValue + (endValue - startValue) * easeOutCubic;
         
@@ -55,7 +56,7 @@ export function AnimatedNumber({
   );
 }
 
-// 数据变化指示器组件
+// 数据变化指示器组件。参数: currentValue 当前值, previousValue 上次值。
 export function DataChangeIndicator({ 
   currentValue, 
   previousValue, 
@@ -88,7 +89,7 @@ export function DataChangeIndicator({
   );
 }
 
-// 加载骨架屏组件
+// 加载骨架屏组件。
 export function SkeletonCard({ className = '' }: { className?: string }) {
   return (
     <div className={`rounded-2xl p-4 bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-white/10 ${className}`}>
@@ -101,7 +102,7 @@ export function SkeletonCard({ className = '' }: { className?: string }) {
   );
 }
 
-// 进度条组件
+// 进度条组件。参数: value 当前值, max 最大值等。
 export function ProgressBar({ 
   value, 
   max = 100, 

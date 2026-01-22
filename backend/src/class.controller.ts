@@ -1,3 +1,4 @@
+// 功能：班级管理接口。
 import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ClassService } from './class.service';

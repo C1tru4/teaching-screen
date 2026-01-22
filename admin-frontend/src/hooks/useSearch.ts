@@ -1,6 +1,8 @@
+// 功能：在 Markdown 内容中搜索标题与正文并生成预览结果。
 import { useState } from 'react'
 import { SearchResult } from '../types/UserGuide'
 
+// 参数：content 为原始 Markdown 字符串。
 export const useSearch = (content: string) => {
   const [isSearching, setIsSearching] = useState(false)
   
@@ -12,7 +14,7 @@ export const useSearch = (content: string) => {
     lines.forEach((line, index) => {
       const lowerLine = line.toLowerCase()
       if (lowerLine.includes(lowerSearchTerm)) {
-        // 清理标题文本，移除Markdown标记
+        // 清理标题文本，移除 Markdown 标记。
         const cleanText = line.replace(/^#+\s*/, '').trim()
         const id = generateId(cleanText)
         
@@ -26,14 +28,14 @@ export const useSearch = (content: string) => {
       }
     })
     
-    // 标题匹配优先排序，限制结果数量
+    // 标题优先展示，并限制结果数量。
     return results
       .sort((a, b) => {
         if (a.type === 'title' && b.type !== 'title') return -1
         if (a.type !== 'title' && b.type === 'title') return 1
         return 0
       })
-      .slice(0, 10) // 限制显示10条结果
+      .slice(0, 10) // 最多展示 10 条
   }
   
   const getPreviewText = (line: string, searchTerm: string): string => {
@@ -61,7 +63,7 @@ export const useSearch = (content: string) => {
   
   const generateId = (text: string): string => {
     return text
-      .replace(/[^\w\s-]/g, '') // 移除特殊字符
+      .replace(/[^\w\s-]/g, '') // 去掉特殊字符
       .replace(/\s+/g, '-') // 空格替换为连字符
       .toLowerCase()
       .substring(0, 50) // 限制长度
@@ -83,7 +85,7 @@ export const useSearch = (content: string) => {
   }
   
   const clearSearch = () => {
-    // 清除高亮显示
+    // 移除已有高亮标记。
     const highlights = document.querySelectorAll('.search-highlight')
     highlights.forEach(highlight => {
       const parent = highlight.parentNode

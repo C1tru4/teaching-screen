@@ -1,3 +1,4 @@
+// 功能：系统配置读写服务。
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
